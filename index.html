@@ -58,7 +58,7 @@ body{font-family:var(--sans);background:var(--cream);color:var(--ink);min-height
 /* ── SEARCH ── */
 .search-wrap{padding:0 0 2px}
 .sbox{display:flex;align-items:center;gap:8px;background:var(--cream);border:1.5px solid var(--border);border-radius:32px;padding:8px 14px}
-.sbox input{flex:1;border:none;background:transparent;font-family:var(--sans);font-size:14px;color:var(--ink);outline:none}
+.sbox input{flex:1;border:none;background:transparent;font-family:var(--sans);font-size:14px;color:var(--ink);outline:none;-webkit-user-select:text;user-select:text}
 .sbox input::placeholder{color:var(--muted)}
 .sico{color:var(--muted);font-size:15px;flex-shrink:0}
 .sclr{color:var(--muted);font-size:18px;background:none;border:none;cursor:pointer;flex-shrink:0;padding:0}
@@ -110,8 +110,25 @@ body{font-family:var(--sans);background:var(--cream);color:var(--ink);min-height
 .tc-spend-lbl{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--amber);margin-bottom:2px}
 .tc-spend-val{font-family:var(--serif);font-size:14px;font-weight:700;color:var(--amber)}
 
-/* ── LABEL PHOTO ZONE ── */
-.photo-zone-label-hint{font-size:11px;color:var(--muted);text-align:center;margin-top:8px}
+/* ── COLLAPSIBLE FORM SECTIONS ── */
+.fcoll-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 0 10px;cursor:pointer;border-top:1px solid var(--border);margin-top:6px;user-select:none;-webkit-user-select:none}
+.fcoll-hdr:active{opacity:.7}
+.fcoll-title{font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--wine)}
+.fcoll-arrow{font-size:18px;color:var(--muted);transition:transform .2s;line-height:1}
+.fcoll-body{display:none}
+.fcoll-body.open{display:block}
+
+/* ── STOP PHOTO STRIP ── */
+.stop-photo-strip{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.stop-photo-thumb{width:64px;height:64px;border-radius:8px;object-fit:cover;flex-shrink:0}
+.stop-photo-add{width:64px;height:64px;border-radius:8px;background:var(--cream);border:1.5px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;color:var(--muted);flex-shrink:0}
+
+/* ── VISIT PHOTO STRIP ── */
+.visit-photo-strip{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.visit-photo-strip::-webkit-scrollbar{display:none}
+.visit-photo-thumb{width:90px;height:90px;border-radius:10px;object-fit:cover;flex-shrink:0}
+.visit-photo-add-btn{width:90px;height:90px;border-radius:10px;background:var(--cream);border:1.5px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;color:var(--muted);flex-shrink:0}
+
 
 
 /* ── FILTER PANEL ── */
@@ -458,10 +475,10 @@ const S={
   showInstall:!localStorage.getItem('installDismissed')&&!window.matchMedia('(display-mode: standalone)').matches,
 };
 const FD={};
-function initFD(w){Object.assign(FD,w?JSON.parse(JSON.stringify(w)):{id:null,addedAt:null,image:null,winery:'',wineName:'',vineyard:'',type:'Red',year:'',abv:'',qty:1,pricePaid:'',estValue:'',drinkFrom:'',drinkTo:'',region:'',city:'',state:'',country:'',cellarSection:'',cellarRow:'',cellarSlot:'',notes:'',blend:[],casesProduced:'',farmingMode:'',cooperage:'',oakPct:'',winemakerName:'',winemakerContact:'',discoveredHow:'',allocStatus:'',allocQty:'',allocReleaseDate:'',allocNotes:'',visitLog:[],openedLog:[]});if(!FD.blend)FD.blend=[];if(!FD.visitLog)FD.visitLog=[];if(!FD.openedLog)FD.openedLog=[];}
+function initFD(w){Object.assign(FD,w?JSON.parse(JSON.stringify(w)):{id:null,addedAt:null,image:null,extraPhotos:[],winery:'',wineName:'',vineyard:'',type:'Red',year:'',abv:'',qty:1,pricePaid:'',estValue:'',drinkFrom:'',drinkTo:'',region:'',city:'',state:'',country:'',cellarSection:'',cellarRow:'',cellarSlot:'',notes:'',blend:[],casesProduced:'',farmingMode:'',cooperage:'',oakPct:'',winemakerName:'',winemakerContact:'',discoveredHow:'',allocStatus:'',allocQty:'',allocReleaseDate:'',allocNotes:'',visitLog:[],openedLog:[]});if(!FD.blend)FD.blend=[];if(!FD.visitLog)FD.visitLog=[];if(!FD.openedLog)FD.openedLog=[];if(!FD.extraPhotos)FD.extraPhotos=[];}
 
 const TFD={};
-function initTFD(t){Object.assign(TFD,t?JSON.parse(JSON.stringify(t)):{id:null,addedAt:null,name:'',date:'',tourOperator:'',location:'',notes:'',image:null,stops:[],totalSpent:''});}
+function initTFD(t){Object.assign(TFD,t?JSON.parse(JSON.stringify(t)):{id:null,addedAt:null,name:'',date:'',location:'',notes:'',image:null,photos:[],stops:[],totalSpent:''});if(!TFD.photos)TFD.photos=[];}
 
 const CFD={};
 function initCFD(c){Object.assign(CFD,c?JSON.parse(JSON.stringify(c)):{id:null,addedAt:null,winery:'',clubName:'',tier:'',status:'Active',annualFee:'',bottlesPerShipment:'',shipmentsPerYear:'',contactEmail:'',joinedDate:'',joinedAt:'',notes:'',website:'',shipments:[],image:null});}
@@ -666,29 +683,35 @@ function renderTourDetail(t){
   const stops=t.stops||[];
   const tasted=stops.reduce((s,st)=>s+(st.tastings||[]).length,0);
   const clubs=stops.reduce((s,st)=>s+(st.tastings||[]).filter(x=>x.clubJoined).length,0);
-  const totalSpend=parseFloat(t.totalSpent)||stops.reduce((s,st)=>s+(parseFloat(st.tastingFee)||0),0);
+  const tastingFeesTotal=stops.reduce((s,st)=>s+(parseFloat(st.tastingFee)||0),0);
+  const winePurchasedTotal=stops.reduce((s,st)=>s+(parseFloat(st.winePurchased)||0),0);
+  const totalSpend=tastingFeesTotal+winePurchasedTotal||parseFloat(t.totalSpent)||0;
   const flagged=stops.reduce((a,st)=>{(st.tastings||[]).filter(x=>x.wantInCellar&&!x.addedToCellar).forEach(x=>a.push({...x,stopName:st.name}));return a;},[]);
+  const photos=t.photos&&t.photos.length?t.photos:(t.image?[t.image]:[]);
 
   return`<div class="tour-detail-header">
     <button class="tdh-back" onclick="S.view='tourList';render()">‹</button>
     <div class="tdh-acts"><button class="tdh-btn" onclick="openTourForm(${t.id})">Edit</button><button class="tdh-btn" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.7)" onclick="deleteTour(${t.id})">Delete</button></div>
-    <div class="tdh-name">${esc(t.name||'Unnamed Tour')}</div>
-    <div class="tdh-meta">${fmtDate(t.date)}${t.tourOperator?` · ${esc(t.tourOperator)}`:''}${t.location?` · ${esc(t.location)}`:''}</div>
-    <div class="tdh-stats">
+    <div class="tdh-name">${esc(t.name||'Unnamed Visit')}</div>
+    <div class="tdh-meta">${fmtDate(t.date)}${t.location?` · ${esc(t.location)}`:''}</div>
+    <div class="tdh-stats" style="grid-template-columns:1fr 1fr 1fr 1fr">
       <div class="tdhs"><div class="tdhs-num">${stops.length}</div><div class="tdhs-lbl">Stops</div></div>
       <div class="tdhs"><div class="tdhs-num">${tasted}</div><div class="tdhs-lbl">Tasted</div></div>
-      <div class="tdhs"><div class="tdhs-num">${clubs}</div><div class="tdhs-lbl">Clubs</div></div>
+      <div class="tdhs"><div class="tdhs-num" style="font-size:${tastingFeesTotal>999?'13px':'20px'}">${tastingFeesTotal>0?fmt$(tastingFeesTotal):'—'}</div><div class="tdhs-lbl">Fees</div></div>
+      <div class="tdhs"><div class="tdhs-num" style="font-size:${winePurchasedTotal>999?'13px':'20px'}">${winePurchasedTotal>0?fmt$(winePurchasedTotal):'—'}</div><div class="tdhs-lbl">Purchased</div></div>
     </div>
   </div>
   <div class="tour-body">
-    ${t.notes?`<div class="dcard"><div class="dcard-title">Tour Notes</div><div style="font-size:14px;line-height:1.6;color:var(--ink2)">${esc(t.notes)}</div></div>`:''}
-    ${totalSpend?`<div class="dcard" style="background:var(--gold-light);border-color:var(--gold-mid)"><div class="dcard-title">Total Spent</div><div style="font-family:var(--serif);font-size:26px;font-weight:700;color:var(--amber)">${fmt$(totalSpend)}</div></div>`:''}
+    ${photos.length?`<div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:14px;padding-bottom:2px">${photos.map(p=>`<img src="${p}" style="width:110px;height:82px;object-fit:cover;border-radius:10px;flex-shrink:0">`).join('')}</div>`:''}
+    ${t.notes?`<div class="dcard"><div class="dcard-title">Visit Notes</div><div style="font-size:14px;line-height:1.6;color:var(--ink2)">${esc(t.notes)}</div></div>`:''}
+    ${totalSpend?`<div class="dcard" style="background:var(--gold-light);border-color:var(--gold-mid)"><div class="dcard-title">Spending Summary</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;text-align:center;gap:10px">${tastingFeesTotal?`<div><div style="font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.8px">Tasting fees</div><div style="font-family:var(--serif);font-size:18px;font-weight:700;color:var(--amber)">${fmt$(tastingFeesTotal)}</div></div>`:''}<div><div style="font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.8px">Wine</div><div style="font-family:var(--serif);font-size:18px;font-weight:700;color:var(--amber)">${fmt$(winePurchasedTotal)}</div></div><div><div style="font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.8px">Total</div><div style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--amber)">${fmt$(totalSpend)}</div></div></div></div>`:''}
 
     ${flagged.length?`<div class="flagged-section"><div class="flagged-title">⭐ Add to Your Cellar (${flagged.length})</div>${flagged.map(x=>`<div class="flagged-row"><div><div class="fr-name">${esc(x.wineName||x.stopName)}</div><div class="fr-sub">${esc(x.stopName)}${x.vintage?` · ${x.vintage}`:''}</div></div><button class="fr-add-btn" onclick="quickAddFromTour(${t.id},'${x.id}')">Add</button></div>`).join('')}</div>`:''}
 
-    ${stops.map((stop,si)=>`<div class="stop-card"><div class="stop-header" onclick="toggleStop('stop_${t.id}_${si}')"><span class="stop-num">${si+1}</span><div class="stop-info"><div class="stop-name">${esc(stop.name||'Unnamed Winery')}</div><div class="stop-meta">${(stop.tastings||[]).length} wines tasted${stop.tastingFee?` · ${fmt$(stop.tastingFee)} tasting fee`:''}${stop.clubJoined?' · 🎉 Joined club':''}</div></div><span class="stop-toggle" id="stop_${t.id}_${si}_ico">▾</span></div>
+    ${stops.map((stop,si)=>`<div class="stop-card"><div class="stop-header" onclick="toggleStop('stop_${t.id}_${si}')"><span class="stop-num">${si+1}</span><div class="stop-info"><div class="stop-name">${esc(stop.name||'Unnamed Winery')}</div><div class="stop-meta">${(stop.tastings||[]).length} tasted${stop.tastingFee?` · ${fmt$(stop.tastingFee)} fee`:''}${stop.winePurchased?` · ${fmt$(stop.winePurchased)} wine`:''}${stop.clubJoined?' · 🎉 Joined club':''}</div></div><span class="stop-toggle" id="stop_${t.id}_${si}_ico">▾</span></div>
       <div id="stop_${t.id}_${si}" style="display:block"><div class="stop-body">
         ${stop.notes?`<div style="font-size:13px;color:var(--muted);margin-bottom:10px;font-style:italic">${esc(stop.notes)}</div>`:''}
+        ${(stop.photos&&stop.photos.length)?`<div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:10px">${stop.photos.map(p=>`<img src="${p}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;flex-shrink:0">`).join('')}</div>`:''}
         ${(stop.tastings||[]).length===0?`<div style="font-size:13px;color:var(--muted);text-align:center;padding:8px">No tastings logged yet</div>`:''}
         ${(stop.tastings||[]).map(tr=>`<div class="tasting-row">
           <div class="tr-stars">${[1,2,3,4,5].map(n=>`<span class="tr-star" onclick="rateTasting(${t.id},${si},'${tr.id}',${n})">${(tr.rating||0)>=n?'★':'☆'}</span>`).join('')}</div>
@@ -795,6 +818,18 @@ function renderWineForm(){
           ${f.image?`<img src="${f.image}" alt="label"><button class="pz-retake" onclick="event.stopPropagation();document.getElementById('photoInput').click()">Retake</button>`:`<div class="pz-inner"><span class="pz-ico">📷</span><span class="pz-lbl">Photograph the label</span><span class="pz-sub">Best for identification & search</span></div>`}
         </div>
         <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this,'photoZone','portrait')">
+        <div style="margin-top:8px">
+          <div style="font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Additional photos <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
+          <div style="display:flex;gap:8px">
+            <div id="extraPhoto1" style="width:70px;height:70px;border-radius:10px;background:var(--cream);border:1.5px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;flex-shrink:0;color:var(--muted)" onclick="document.getElementById('extraPhotoInput1').click()">+
+              <input type="file" id="extraPhotoInput1" accept="image/*" capture="environment" style="display:none" onchange="handleExtraPhoto(this,'extraPhoto1',0)">
+            </div>
+            <div id="extraPhoto2" style="width:70px;height:70px;border-radius:10px;background:var(--cream);border:1.5px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;flex-shrink:0;color:var(--muted)" onclick="document.getElementById('extraPhotoInput2').click()">+
+              <input type="file" id="extraPhotoInput2" accept="image/*" capture="environment" style="display:none" onchange="handleExtraPhoto(this,'extraPhoto2',1)">
+            </div>
+            <div style="display:flex;align-items:center;font-size:12px;color:var(--muted);padding-left:4px;line-height:1.5">Bottle shot,<br>back label, etc.</div>
+          </div>
+        </div>
       </div>
       <div class="fsect"><span>Identity & Origin</span></div>
       <div class="fg"><label>Winery Name *</label><input class="fi" id="f_winery" type="text" placeholder="e.g. Littorai, Radio-Coteau" value="${esc(f.winery||'')}" autocomplete="off" autocorrect="off" autocapitalize="words"></div>
@@ -808,49 +843,83 @@ function renderWineForm(){
         <div class="fg"><label>ABV %</label><input class="fi" id="f_abv" type="number" step=".1" placeholder="13.5" value="${f.abv||''}" inputmode="decimal"></div>
         <div class="fg"><label>Qty in Cellar *</label><input class="fi" id="f_qty" type="number" min="1" placeholder="1" value="${f.qty||1}" inputmode="numeric"></div>
       </div>
-      <div class="fsect"><span>Production</span></div>
       <div class="fgrow">
-        <div class="fg"><label>Cases Produced</label><input class="fi" id="f_casesProduced" type="number" placeholder="250" value="${f.casesProduced||''}"></div>
-        <div class="fg"><label>Farming</label><select class="fi" id="f_farmingMode"><option value="">—</option>${FARM_MODES.map(m=>`<option${f.farmingMode===m?' selected':''}>${m}</option>`).join('')}</select></div>
+        <div class="fg"><label>Region / Appellation</label><input class="fi" id="f_region" type="text" placeholder="e.g. Sonoma Coast" value="${esc(f.region||'')}" autocomplete="off"></div>
+        <div class="fg"><label>Country</label><input class="fi" id="f_country" type="text" placeholder="USA" value="${esc(f.country||'')}" autocomplete="off"></div>
       </div>
-      <div class="fgrow">
-        <div class="fg"><label>Cooperage</label><input class="fi" id="f_cooperage" type="text" placeholder="e.g. Taransaud" value="${esc(f.cooperage||'')}"></div>
-        <div class="fg"><label>New Oak %</label><input class="fi" id="f_oakPct" type="number" min="0" max="100" placeholder="30" value="${f.oakPct||''}"></div>
+
+      <!-- PRICING (collapsible) -->
+      <div class="fcoll-hdr" onclick="toggleFColl('pricing')">
+        <span class="fcoll-title">Pricing & Value</span>
+        <span class="fcoll-arrow" id="fcoll-arr-pricing">›</span>
       </div>
-      <div class="fsect"><span>Winemaker</span></div>
-      <div class="fg"><label>Winemaker Name</label><input class="fi" id="f_winemakerName" type="text" placeholder="e.g. Ted Lemon" value="${esc(f.winemakerName||'')}"></div>
-      <div class="fg"><label>Contact / Mailing List Email</label><input class="fi" id="f_winemakerContact" type="text" placeholder="allocations@winery.com" value="${esc(f.winemakerContact||'')}"></div>
-      <div class="fg"><label>How I Discovered This Wine</label><input class="fi" id="f_discoveredHow" type="text" placeholder="e.g. Tasting room, friend's rec" value="${esc(f.discoveredHow||'')}"></div>
-      <div class="fsect"><span>Pricing</span></div>
-      <div class="fgrow">
-        <div class="fg"><label>Price Paid / btl</label><input class="fi" id="f_pricePaid" type="number" step=".01" placeholder="0.00" value="${f.pricePaid||''}"></div>
-        <div class="fg"><label>Est. Value / btl</label><input class="fi" id="f_estValue" type="number" step=".01" placeholder="0.00" value="${f.estValue||''}"></div>
+      <div class="fcoll-body" id="fcoll-body-pricing">
+        <div class="fgrow">
+          <div class="fg"><label>Price Paid / btl</label><input class="fi" id="f_pricePaid" type="number" step=".01" placeholder="0.00" value="${f.pricePaid||''}" inputmode="decimal"></div>
+          <div class="fg"><label>Est. Value / btl</label><input class="fi" id="f_estValue" type="number" step=".01" placeholder="0.00" value="${f.estValue||''}" inputmode="decimal"></div>
+        </div>
+        <div class="fgrow">
+          <div class="fg"><label>Drink From</label><input class="fi" id="f_drinkFrom" type="number" placeholder="${yr}" value="${f.drinkFrom||''}" inputmode="numeric"></div>
+          <div class="fg"><label>Drink By</label><input class="fi" id="f_drinkTo" type="number" placeholder="${yr+8}" value="${f.drinkTo||''}" inputmode="numeric"></div>
+        </div>
       </div>
-      <div class="fsect"><span>Drinking Window</span></div>
-      <div class="fgrow">
-        <div class="fg"><label>Drink From</label><input class="fi" id="f_drinkFrom" type="number" placeholder="${yr}" value="${f.drinkFrom||''}"></div>
-        <div class="fg"><label>Drink By</label><input class="fi" id="f_drinkTo" type="number" placeholder="${yr+8}" value="${f.drinkTo||''}"></div>
+
+      <!-- PRODUCTION (collapsible) -->
+      <div class="fcoll-hdr" onclick="toggleFColl('production')">
+        <span class="fcoll-title">Production Details</span>
+        <span class="fcoll-arrow" id="fcoll-arr-production">›</span>
       </div>
-      <div class="fsect"><span>Allocation</span></div>
-      <div class="fgrow">
-        <div class="fg"><label>Status</label><select class="fi" id="f_allocStatus"><option value="">None</option>${ALLOC_STATI.map(s=>`<option${f.allocStatus===s?' selected':''}>${s}</option>`).join('')}</select></div>
-        <div class="fg"><label>Allocated Qty</label><input class="fi" id="f_allocQty" type="number" placeholder="bottles" value="${f.allocQty||''}"></div>
+      <div class="fcoll-body" id="fcoll-body-production">
+        <div class="fgrow">
+          <div class="fg"><label>Cases Produced</label><input class="fi" id="f_casesProduced" type="number" placeholder="250" value="${f.casesProduced||''}" inputmode="numeric"></div>
+          <div class="fg"><label>Farming</label><select class="fi" id="f_farmingMode"><option value="">—</option>${FARM_MODES.map(m=>`<option${f.farmingMode===m?' selected':''}>${m}</option>`).join('')}</select></div>
+        </div>
+        <div class="fgrow">
+          <div class="fg"><label>Cooperage</label><input class="fi" id="f_cooperage" type="text" placeholder="e.g. Taransaud" value="${esc(f.cooperage||'')}" autocomplete="off"></div>
+          <div class="fg"><label>New Oak %</label><input class="fi" id="f_oakPct" type="number" min="0" max="100" placeholder="30" value="${f.oakPct||''}" inputmode="numeric"></div>
+        </div>
+        <div class="fg"><label>City / Village</label><input class="fi" id="f_city" type="text" placeholder="Sebastopol" value="${esc(f.city||'')}" autocomplete="off"></div>
+        <div class="fg"><label>State</label><input class="fi" id="f_state" type="text" placeholder="CA" value="${esc(f.state||'')}" autocomplete="off"></div>
       </div>
-      <div class="fg"><label>Release / Window Date</label><input class="fi" id="f_allocReleaseDate" type="text" placeholder="e.g. Spring 2026" value="${esc(f.allocReleaseDate||'')}"></div>
-      <div class="fg"><label>Allocation Notes</label><input class="fi" id="f_allocNotes" type="text" placeholder="e.g. Mailing list since 2019, 3-bottle max" value="${esc(f.allocNotes||'')}"></div>
-      <div class="fsect"><span>Origin</span></div>
-      <div class="fg"><label>Region / Appellation</label><input class="fi" id="f_region" type="text" placeholder="e.g. Sonoma Coast" value="${esc(f.region||'')}"></div>
-      <div class="fg"><label>City / Village</label><input class="fi" id="f_city" type="text" placeholder="Sebastopol" value="${esc(f.city||'')}"></div>
-      <div class="fgrow">
-        <div class="fg"><label>State</label><input class="fi" id="f_state" type="text" placeholder="CA" value="${esc(f.state||'')}"></div>
-        <div class="fg"><label>Country</label><input class="fi" id="f_country" type="text" placeholder="USA" value="${esc(f.country||'')}"></div>
+
+      <!-- WINEMAKER (collapsible) -->
+      <div class="fcoll-hdr" onclick="toggleFColl('winemaker')">
+        <span class="fcoll-title">Winemaker & Discovery</span>
+        <span class="fcoll-arrow" id="fcoll-arr-winemaker">›</span>
       </div>
-      <div class="fsect"><span>Cellar Location</span></div>
-      <div class="fg"><label>Section / Rack</label><input class="fi" id="f_cellarSection" type="text" placeholder="e.g. Rack A" value="${esc(f.cellarSection||'')}"></div>
-      <div class="fgrow">
-        <div class="fg"><label>Row</label><input class="fi" id="f_cellarRow" type="text" placeholder="3" value="${esc(f.cellarRow||'')}"></div>
-        <div class="fg"><label>Slot</label><input class="fi" id="f_cellarSlot" type="text" placeholder="12" value="${esc(f.cellarSlot||'')}"></div>
+      <div class="fcoll-body" id="fcoll-body-winemaker">
+        <div class="fg"><label>Winemaker Name</label><input class="fi" id="f_winemakerName" type="text" placeholder="e.g. Ted Lemon" value="${esc(f.winemakerName||'')}" autocomplete="off" autocapitalize="words"></div>
+        <div class="fg"><label>Contact / Mailing List Email</label><input class="fi" id="f_winemakerContact" type="text" placeholder="allocations@winery.com" value="${esc(f.winemakerContact||'')}" autocomplete="off"></div>
+        <div class="fg"><label>How I Discovered This Wine</label><input class="fi" id="f_discoveredHow" type="text" placeholder="e.g. Tasting room, friend's rec" value="${esc(f.discoveredHow||'')}" autocomplete="off"></div>
       </div>
+
+      <!-- ALLOCATION (collapsible) -->
+      <div class="fcoll-hdr" onclick="toggleFColl('allocation')">
+        <span class="fcoll-title">Allocation</span>
+        <span class="fcoll-arrow" id="fcoll-arr-allocation">›</span>
+      </div>
+      <div class="fcoll-body" id="fcoll-body-allocation">
+        <div class="fgrow">
+          <div class="fg"><label>Status</label><select class="fi" id="f_allocStatus"><option value="">None</option>${ALLOC_STATI.map(s=>`<option${f.allocStatus===s?' selected':''}>${s}</option>`).join('')}</select></div>
+          <div class="fg"><label>Allocated Qty</label><input class="fi" id="f_allocQty" type="number" placeholder="bottles" value="${f.allocQty||''}" inputmode="numeric"></div>
+        </div>
+        <div class="fg"><label>Release / Window Date</label><input class="fi" id="f_allocReleaseDate" type="text" placeholder="e.g. Spring 2026" value="${esc(f.allocReleaseDate||'')}" autocomplete="off"></div>
+        <div class="fg"><label>Allocation Notes</label><input class="fi" id="f_allocNotes" type="text" placeholder="e.g. Mailing list since 2019, 3-bottle max" value="${esc(f.allocNotes||'')}" autocomplete="off"></div>
+      </div>
+
+      <!-- CELLAR LOCATION (collapsible) -->
+      <div class="fcoll-hdr" onclick="toggleFColl('cellarloc')">
+        <span class="fcoll-title">Cellar Location</span>
+        <span class="fcoll-arrow" id="fcoll-arr-cellarloc">›</span>
+      </div>
+      <div class="fcoll-body" id="fcoll-body-cellarloc">
+        <div class="fg"><label>Section / Rack</label><input class="fi" id="f_cellarSection" type="text" placeholder="e.g. Rack A" value="${esc(f.cellarSection||'')}" autocomplete="off"></div>
+        <div class="fgrow">
+          <div class="fg"><label>Row</label><input class="fi" id="f_cellarRow" type="text" placeholder="3" value="${esc(f.cellarRow||'')}" autocomplete="off"></div>
+          <div class="fg"><label>Slot</label><input class="fi" id="f_cellarSlot" type="text" placeholder="12" value="${esc(f.cellarSlot||'')}" autocomplete="off"></div>
+        </div>
+      </div>
+
       <div id="blendSection" style="display:${iB?'block':'none'}">
         <div class="fsect"><span>Blend</span></div>
         <div id="blendRows"></div>
@@ -870,19 +939,19 @@ function renderTourForm(){
     <div class="sh-handle"></div>
     <div class="sh-header"><span class="sh-title">${f.id?'Edit Visit':'New Visit'}</span><button class="sh-close" onclick="closeOverlay()">×</button></div>
     <div class="sh-body">
-      <div class="fg"><label>Visit / Trip Name *</label><input class="fi" id="t_name" type="text" placeholder="e.g. Sonoma Day Trip, Napa Members Day" value="${esc(f.name||'')}"></div>
+      <div class="fg"><label>Visit / Trip Name *</label><input class="fi" id="t_name" type="text" placeholder="e.g. Sonoma Day Trip, Napa Members Day" value="${esc(f.name||'')}" autocomplete="off" autocorrect="off" autocapitalize="words"></div>
       <div class="fgrow">
         <div class="fg"><label>Date</label><input class="fi" id="t_date" type="date" value="${f.date||today()}"></div>
-        <div class="fg"><label>Location / Region</label><input class="fi" id="t_location" type="text" placeholder="e.g. Sonoita, AZ" value="${esc(f.location||'')}"></div>
+        <div class="fg"><label>Location / Region</label><input class="fi" id="t_location" type="text" placeholder="e.g. Sonoma, CA" value="${esc(f.location||'')}" autocomplete="off"></div>
       </div>
-      <div class="fg"><label>Tour Operator / Organizer</label><input class="fi" id="t_tourOperator" type="text" placeholder="e.g. Arizona Wine Country Tours" value="${esc(f.tourOperator||'')}"></div>
-      <div class="fg"><label>Total Spent (tastings, purchases)</label><input class="fi" id="t_totalSpent" type="number" step=".01" placeholder="0.00" value="${f.totalSpent||''}"></div>
-      <div class="fg"><label>Tour Notes / Memories</label><textarea class="fi" id="t_notes" rows="3" placeholder="General impressions, highlights, who you went with…">${esc(f.notes||'')}</textarea></div>
-      <div class="fg"><label>Tour Photo</label>
-        <div class="photo-zone-land" id="tourPhotoZone" onclick="document.getElementById('tourPhotoInput').click()">
-          ${f.image?`<img src="${f.image}" alt="tour">`:`<div class="pz-inner"><span class="pz-ico">📷</span><span class="pz-lbl">Add a tour photo</span></div>`}
+      <div class="fg"><label>Visit Notes / Memories</label><textarea class="fi" id="t_notes" rows="3" placeholder="General impressions, highlights, who you went with…">${esc(f.notes||'')}</textarea></div>
+      <div class="fg"><label>Visit Photos <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">— add as many as you like</span></label>
+        <div class="visit-photo-strip" id="visitPhotoStrip">
+          ${(f.photos||[]).map((p,i)=>`<img src="${p}" class="visit-photo-thumb" onclick="retakeVisitPhoto(${i})">`).join('')}
+          <div class="visit-photo-add-btn" onclick="addVisitPhoto()">+
+            <input type="file" id="visitPhotoInput" accept="image/*" style="display:none" onchange="handleVisitPhoto(this)">
+          </div>
         </div>
-        <input type="file" id="tourPhotoInput" accept="image/*" style="display:none" onchange="handlePhoto(this,'tourPhotoZone','landscape')">
       </div>
       <button class="save-btn" onclick="saveTourForm()">${f.id?'Save Changes':'Create Visit'}</button>
     </div>
@@ -947,14 +1016,21 @@ function renderAddStop(tourId){
     <div class="sh-handle"></div>
     <div class="sh-header"><span class="sh-title">Add Winery Stop</span><button class="sh-close" onclick="closeOverlay()">×</button></div>
     <div class="sh-body">
-      <div class="fg"><label>Winery Name *</label><input class="fi" id="as_name" type="text" placeholder="e.g. Callaghan Vineyards"></div>
+      <div class="fg"><label>Winery Name *</label><input class="fi" id="as_name" type="text" placeholder="e.g. Callaghan Vineyards" autocomplete="off" autocorrect="off" autocapitalize="words"></div>
       <div class="fgrow">
         <div class="fg"><label>Arrival Time</label><input class="fi" id="as_time" type="time"></div>
-        <div class="fg"><label>Tasting Fee</label><input class="fi" id="as_fee" type="number" step=".01" placeholder="0.00"></div>
+        <div class="fg"><label>Tasting Fee ($)</label><input class="fi" id="as_fee" type="number" step=".01" placeholder="0.00" inputmode="decimal"></div>
       </div>
-      <div class="fg"><label>Wine Purchased ($)</label><input class="fi" id="as_winePurchased" type="number" step=".01" placeholder="0.00"></div>
-      <div class="fg"><label>Winery Contact / Email</label><input class="fi" id="as_contact" type="text" placeholder="info@winery.com"></div>
+      <div class="fg"><label>Wine Purchased ($)</label><input class="fi" id="as_winePurchased" type="number" step=".01" placeholder="0.00" inputmode="decimal"></div>
+      <div class="fg"><label>Winery Contact / Email</label><input class="fi" id="as_contact" type="text" placeholder="info@winery.com" autocomplete="off"></div>
       <div class="fg"><label>Stop Notes</label><textarea class="fi" id="as_notes" rows="2" placeholder="Ambiance, winemaker notes, highlights…"></textarea></div>
+      <div class="fg"><label>Stop Photos <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">— optional</span></label>
+        <div class="stop-photo-strip" id="stopPhotoStrip">
+          <div class="stop-photo-add" onclick="addStopPhoto()">+
+            <input type="file" id="stopPhotoInput" accept="image/*" style="display:none" onchange="handleStopPhoto(this)">
+          </div>
+        </div>
+      </div>
       <button class="save-btn" onclick="saveStop(${tourId})">Add Stop</button>
     </div>
   </div></div>`;
@@ -1033,9 +1109,33 @@ function render(){
 
 function bindSearch(){
   const el=document.getElementById('searchInput');
-  if(el)el.addEventListener('input',e=>{S.search=e.target.value;render();});
+  if(el){
+    // Use direct DOM filtering instead of full re-render to preserve keyboard focus on iOS
+    el.addEventListener('input',e=>{
+      S.search=e.target.value;
+      // Re-render only the wine grid, not the whole page
+      filterWineGrid();
+    });
+    el.addEventListener('change',e=>{S.search=e.target.value;});
+  }
   const cl=document.getElementById('searchClr');
   if(cl)cl.addEventListener('click',()=>{S.search='';render();});
+}
+
+function filterWineGrid(){
+  // Update count display without full re-render
+  const q=(S.search||'').toLowerCase();
+  const filtered=applyFilters(sortWines(S.wines,S.sortKey));
+  const ct=document.querySelector('.sbar-ct');
+  if(ct){const tb=S.wines.reduce((s,w)=>s+(w.qty||1),0);const rn=S.wines.filter(w=>{const st=drinkStatus(w);return st&&st.pill==='dwp-ready';}).length;ct.textContent=`${filtered.length} wines · ${tb} bottles${rn?` · ${rn} ready`:''}`;} 
+  // Show/hide cards
+  document.querySelectorAll('.wcard').forEach((card,i)=>{
+    const w=filtered[i];
+    card.style.display=w?'':'none';
+  });
+  // If search changed which cards show, do a real render (but debounced to avoid focus loss)
+  clearTimeout(window._searchTimer);
+  window._searchTimer=setTimeout(()=>{if(document.activeElement!==document.getElementById('searchInput'))render();},800);
 }
 
 // ══════════════════════════════════════════
@@ -1067,7 +1167,7 @@ function renderHome(){
   </div>
   <div class="dash-stat-grid">
     <div class="dash-stat"><div class="ds-lbl">In cellar</div><div class="ds-val">${tb}</div><div class="ds-note">${wines.length} wine${wines.length!==1?'s':''}</div></div>
-    <div class="dash-stat"><div class="ds-lbl">Consumed ever</div><div class="ds-val">${consumed}</div><div class="ds-note">${consumedThisYear} this year</div></div>
+    <div class="dash-stat"><div class="ds-lbl">Consumed</div><div class="ds-val">${consumed}</div><div class="ds-note">${consumedThisYear} this year</div></div>
     <div class="dash-stat"><div class="ds-lbl">Tasting fees</div><div class="ds-val">${totalTastingFees>0?fmt$(totalTastingFees):'—'}</div><div class="ds-note">Across ${tours.length} visit${tours.length!==1?'s':''}</div></div>
     <div class="dash-stat"><div class="ds-lbl">Wine purchased</div><div class="ds-val">${totalWinePurchased>0?fmt$(totalWinePurchased):'—'}</div><div class="ds-note">Visits + clubs</div></div>
   </div>
@@ -1148,6 +1248,70 @@ function removeBlend(i){FD.blend.forEach((b,j)=>{const e=document.getElementById
 // ══════════════════════════════════════════
 // PHOTO
 // ══════════════════════════════════════════
+function toggleFColl(key){
+  const body=document.getElementById('fcoll-body-'+key);
+  const arrow=document.getElementById('fcoll-arr-'+key);
+  if(!body)return;
+  const open=body.classList.toggle('open');
+  if(arrow)arrow.style.transform=open?'rotate(90deg)':'';
+}
+
+// Temp storage for stop photos while adding a stop
+let _stopPhotos=[];
+function addStopPhoto(){document.getElementById('stopPhotoInput').click();}
+function handleStopPhoto(input){
+  const file=input.files[0];if(!file)return;
+  const img=new Image(),url=URL.createObjectURL(file);
+  img.onload=()=>{
+    const MAX=900,sc=Math.min(1,MAX/Math.max(img.width,img.height));
+    const cv=document.createElement('canvas');cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);
+    cv.getContext('2d').drawImage(img,0,0,img.width,img.height,0,0,cv.width,cv.height);
+    const data=cv.toDataURL('image/jpeg',.80);URL.revokeObjectURL(url);
+    _stopPhotos.push(data);
+    const strip=document.getElementById('stopPhotoStrip');
+    if(strip)strip.innerHTML=_stopPhotos.map((p,i)=>`<img src="${p}" class="stop-photo-thumb">`).join('')+`<div class="stop-photo-add" onclick="addStopPhoto()">+<input type="file" id="stopPhotoInput" accept="image/*" style="display:none" onchange="handleStopPhoto(this)"></div>`;
+  };img.src=url;
+}
+
+function addVisitPhoto(){document.getElementById('visitPhotoInput').click();}
+function retakeVisitPhoto(idx){
+  // remove photo at idx
+  if(!TFD.photos)TFD.photos=[];
+  TFD.photos.splice(idx,1);
+  // re-render strip
+  const strip=document.getElementById('visitPhotoStrip');
+  if(strip)strip.innerHTML=(TFD.photos.map((p,i)=>`<img src="${p}" class="visit-photo-thumb" onclick="retakeVisitPhoto(${i})">`).join(''))+`<div class="visit-photo-add-btn" onclick="addVisitPhoto()">+<input type="file" id="visitPhotoInput" accept="image/*" style="display:none" onchange="handleVisitPhoto(this)"></div>`;
+}
+function handleVisitPhoto(input){
+  const file=input.files[0];if(!file)return;
+  const img=new Image(),url=URL.createObjectURL(file);
+  img.onload=()=>{
+    const MAX=1200,sc=Math.min(1,MAX/Math.max(img.width,img.height));
+    const cv=document.createElement('canvas');cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);
+    cv.getContext('2d').drawImage(img,0,0,img.width,img.height,0,0,cv.width,cv.height);
+    const data=cv.toDataURL('image/jpeg',.82);URL.revokeObjectURL(url);
+    if(!TFD.photos)TFD.photos=[];
+    TFD.photos.push(data);
+    const strip=document.getElementById('visitPhotoStrip');
+    if(strip)strip.innerHTML=(TFD.photos.map((p,i)=>`<img src="${p}" class="visit-photo-thumb" onclick="retakeVisitPhoto(${i})">`).join(''))+`<div class="visit-photo-add-btn" onclick="addVisitPhoto()">+<input type="file" id="visitPhotoInput" accept="image/*" style="display:none" onchange="handleVisitPhoto(this)"></div>`;
+  };img.src=url;
+}
+
+function handleExtraPhoto(input,zoneId,idx){
+  const file=input.files[0];if(!file)return;
+  const img=new Image(),url=URL.createObjectURL(file);
+  img.onload=()=>{
+    const MAX=900,sc=Math.min(1,MAX/Math.max(img.width,img.height));
+    const cv=document.createElement('canvas');cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);
+    cv.getContext('2d').drawImage(img,0,0,img.width,img.height,0,0,cv.width,cv.height);
+    const data=cv.toDataURL('image/jpeg',.80);URL.revokeObjectURL(url);
+    if(!FD.extraPhotos)FD.extraPhotos=[];
+    FD.extraPhotos[idx]=data;
+    const z=document.getElementById(zoneId);
+    if(z)z.innerHTML=`<img src="${data}" style="width:100%;height:100%;object-fit:cover;border-radius:10px"><input type="file" id="extraPhotoInput${idx+1}" accept="image/*" capture="environment" style="display:none" onchange="handleExtraPhoto(this,'${zoneId}',${idx})">`;
+  };img.src=url;
+}
+
 function handlePhoto(input,zoneId,mode){
   const file=input.files[0];if(!file)return;
   const img=new Image(),url=URL.createObjectURL(file);
@@ -1159,7 +1323,6 @@ function handlePhoto(input,zoneId,mode){
     cv.getContext('2d').drawImage(img,sx,sy,sw,sh,0,0,cv.width,cv.height);
     const data=cv.toDataURL('image/jpeg',.85);URL.revokeObjectURL(url);
     if(zoneId==='photoZone')FD.image=data;
-    else if(zoneId==='tourPhotoZone')TFD.image=data;
     const z=document.getElementById(zoneId);
     if(z)z.innerHTML=`<img src="${data}" alt="photo" style="width:100%;height:100%;object-fit:cover">${mode==='portrait'?`<button class="pz-retake" onclick="event.stopPropagation();document.getElementById('photoInput').click()">Retake</button>`:''}`;
   };img.src=url;
@@ -1173,7 +1336,7 @@ function saveWineForm(){
   const winery=g('f_winery');if(!winery){alert('Winery name is required');return;}
   const typeEl=document.getElementById('f_type'),type=typeEl?typeEl.value:FD.type;
   FD.blend.forEach((b,i)=>{const e=document.getElementById(`bp${i}`);if(e)b.pct=e.value;const ev=document.getElementById(`bv${i}`);if(ev)b.variety=ev.value;});
-  const wine={id:FD.id||Date.now(),addedAt:FD.addedAt||Date.now(),image:FD.image||null,winery,wineName:g('f_wineName'),vineyard:g('f_vineyard'),type,year:parseInt(g('f_year'))||null,abv:parseFloat(g('f_abv'))||null,qty:parseInt(g('f_qty'))||1,pricePaid:parseFloat(g('f_pricePaid'))||null,estValue:parseFloat(g('f_estValue'))||null,drinkFrom:parseInt(g('f_drinkFrom'))||null,drinkTo:parseInt(g('f_drinkTo'))||null,region:g('f_region'),city:g('f_city'),state:g('f_state'),country:g('f_country'),cellarSection:g('f_cellarSection'),cellarRow:g('f_cellarRow'),cellarSlot:g('f_cellarSlot'),notes:g('f_notes'),blend:type==='Blend'?FD.blend.filter(b=>b.variety):[],casesProduced:parseInt(g('f_casesProduced'))||null,farmingMode:g('f_farmingMode'),cooperage:g('f_cooperage'),oakPct:parseFloat(g('f_oakPct'))||null,winemakerName:g('f_winemakerName'),winemakerContact:g('f_winemakerContact'),discoveredHow:g('f_discoveredHow'),allocStatus:g('f_allocStatus'),allocQty:parseInt(g('f_allocQty'))||null,allocReleaseDate:g('f_allocReleaseDate'),allocNotes:g('f_allocNotes'),visitLog:FD.visitLog||[],openedLog:FD.openedLog||[]};
+  const wine={id:FD.id||Date.now(),addedAt:FD.addedAt||Date.now(),image:FD.image||null,extraPhotos:FD.extraPhotos||[],winery,wineName:g('f_wineName'),vineyard:g('f_vineyard'),type,year:parseInt(g('f_year'))||null,abv:parseFloat(g('f_abv'))||null,qty:parseInt(g('f_qty'))||1,pricePaid:parseFloat(g('f_pricePaid'))||null,estValue:parseFloat(g('f_estValue'))||null,drinkFrom:parseInt(g('f_drinkFrom'))||null,drinkTo:parseInt(g('f_drinkTo'))||null,region:g('f_region'),city:g('f_city'),state:g('f_state'),country:g('f_country'),cellarSection:g('f_cellarSection'),cellarRow:g('f_cellarRow'),cellarSlot:g('f_cellarSlot'),notes:g('f_notes'),blend:type==='Blend'?FD.blend.filter(b=>b.variety):[],casesProduced:parseInt(g('f_casesProduced'))||null,farmingMode:g('f_farmingMode'),cooperage:g('f_cooperage'),oakPct:parseFloat(g('f_oakPct'))||null,winemakerName:g('f_winemakerName'),winemakerContact:g('f_winemakerContact'),discoveredHow:g('f_discoveredHow'),allocStatus:g('f_allocStatus'),allocQty:parseInt(g('f_allocQty'))||null,allocReleaseDate:g('f_allocReleaseDate'),allocNotes:g('f_allocNotes'),visitLog:FD.visitLog||[],openedLog:FD.openedLog||[]};
   const isEdit=FD.id&&S.wines.find(w=>w.id===FD.id);
   S.wines=isEdit?S.wines.map(w=>w.id===wine.id?wine:w):[wine,...S.wines];
   save();closeOverlay();
@@ -1186,8 +1349,11 @@ function saveWineForm(){
 // ══════════════════════════════════════════
 function saveTourForm(){
   const g=id=>{const el=document.getElementById(id);return el?(el.tagName==='TEXTAREA'?el.value:el.value.trim()):'';}
-  const name=g('t_name');if(!name){alert('Tour name is required');return;}
-  const tour={id:TFD.id||Date.now(),addedAt:TFD.addedAt||Date.now(),name,date:g('t_date'),tourOperator:g('t_tourOperator'),location:g('t_location'),totalSpent:parseFloat(g('t_totalSpent'))||null,notes:g('t_notes'),image:TFD.image||null,stops:TFD.stops||[]};
+  const name=g('t_name');if(!name){alert('Visit name is required');return;}
+  // Auto-calc totalSpent from stops
+  const stops=TFD.stops||[];
+  const totalSpent=stops.reduce((s,st)=>s+(parseFloat(st.tastingFee)||0)+(parseFloat(st.winePurchased)||0),0)||null;
+  const tour={id:TFD.id||Date.now(),addedAt:TFD.addedAt||Date.now(),name,date:g('t_date'),location:g('t_location'),notes:g('t_notes'),image:TFD.photos&&TFD.photos[0]?TFD.photos[0]:TFD.image||null,photos:TFD.photos||[],stops,totalSpent};
   const isEdit=TFD.id&&S.tours.find(t=>t.id===TFD.id);
   S.tours=isEdit?S.tours.map(t=>t.id===tour.id?tour:t):[tour,...S.tours];
   save();closeOverlay();S.selectedId=tour.id;S.view='tourDetail';
@@ -1199,7 +1365,8 @@ function addStopToTour(tourId){injectOverlay(renderAddStop(tourId));}
 function saveStop(tourId){
   const g=id=>{const el=document.getElementById(id);return el?el.value.trim():'';}
   const name=g('as_name');if(!name){alert('Winery name is required');return;}
-  const stop={id:Date.now(),name,time:g('as_time'),tastingFee:parseFloat(g('as_fee'))||null,winePurchased:parseFloat(g('as_winePurchased'))||null,winemakerContact:g('as_contact'),notes:g('as_notes'),tastings:[],clubJoined:false};
+  const stop={id:Date.now(),name,time:g('as_time'),tastingFee:parseFloat(g('as_fee'))||null,winePurchased:parseFloat(g('as_winePurchased'))||null,winemakerContact:g('as_contact'),notes:g('as_notes'),photos:[..._stopPhotos],tastings:[],clubJoined:false};
+  _stopPhotos=[];
   const tour=S.tours.find(t=>t.id===tourId);if(!tour)return;
   if(!tour.stops)tour.stops=[];
   tour.stops.push(stop);
