@@ -554,7 +554,7 @@ function renderNav(){
     <button class="bntab${S.tab==='home'?' active':''}" onclick="switchTab('home')"><span class="bntab-ico">🏠</span><span class="bntab-lbl">Home</span></button>
     <button class="bntab${S.tab==='cellar'?' active':''}" onclick="switchTab('cellar')"><span class="bntab-ico">🍷</span><span class="bntab-lbl">Cellar</span></button>
     <button class="bntab${S.tab==='tours'?' active':''}" onclick="switchTab('tours')"><span class="bntab-ico">🗺</span><span class="bntab-lbl">Visits</span></button>
-    <button class="bntab${S.tab==='clubs'?' active':''}" onclick="switchTab('clubs')"><span class="bntab-ico">📬</span><span class="bntab-lbl">Clubs</span></button>
+    <button class="bntab${S.tab==='clubs'?' active':''}" onclick="switchTab('clubs')"><span class="bntab-ico">📦</span><span class="bntab-lbl">Clubs</span></button>
   </div>`;
 }
 
@@ -631,7 +631,7 @@ function renderWineDetail(w){
     ${(w.casesProduced||w.farmingMode||w.cooperage||w.oakPct)?`<div class="dcard"><div class="dcard-title">Production</div><div class="kv">${w.casesProduced?`<span class="kv-k">Cases</span><span class="kv-v">${fmtN(w.casesProduced)}</span>`:''} ${w.farmingMode?`<span class="kv-k">Farming</span><span class="kv-v">${esc(w.farmingMode)}</span>`:''} ${w.cooperage?`<span class="kv-k">Cooperage</span><span class="kv-v">${esc(w.cooperage)}</span>`:''} ${w.oakPct?`<span class="kv-k">New oak</span><span class="kv-v">${w.oakPct}%</span>`:''}</div></div>`:''}
     ${w.allocStatus?`<div class="dcard"><div class="dcard-title">Allocation</div><div class="alloc-item"><div class="kv"><span class="kv-k">Status</span><span class="kv-v"><span class="as-pill as-${esc(w.allocStatus)}">${esc(w.allocStatus)}</span></span>${w.allocQty?`<span class="kv-k">Qty</span><span class="kv-v">${w.allocQty} bottles</span>`:''} ${w.allocReleaseDate?`<span class="kv-k">Release</span><span class="kv-v">${esc(w.allocReleaseDate)}</span>`:''} ${w.allocNotes?`<span class="kv-k">Notes</span><span class="kv-v">${esc(w.allocNotes)}</span>`:''}</div></div></div>`:''}
     ${(w.type==='Blend'&&w.blend&&w.blend.length)?`<div class="dcard"><div class="dcard-title">Blend</div>${w.blend.map(b=>`<div class="bv-row"><div class="bv-label"><span>${esc(b.variety)}</span><span>${b.pct}%</span></div><div class="bv-track"><div class="bv-fill" style="width:${b.pct}%"></div></div></div>`).join('')}</div>`:''}
-    ${(w.openedLog&&w.openedLog.length)?`<div class="dcard"><div class="dcard-title">Bottles Opened</div>${w.openedLog.map(o=>`<div class="oe-entry"><div class="oe-top"><span class="oe-date">${fmtDate(o.date)}</span>${o.occasion?`<span class="oe-occ">${esc(o.occasion)}</span>`:''}</div>${o.notes?`<div class="oe-note">${esc(o.notes)}</div>`:''} ${o.pairedWith?`<div class="oe-pair">🍽 ${esc(o.pairedWith)}</div>`:''}</div>`).join('')}<button style="width:100%;padding:9px;border-radius:9px;background:var(--wine-light);border:1px solid #d4a0a8;color:var(--wine);font-weight:600;font-size:13px;cursor:pointer;margin-top:6px" onclick="logOpened(${w.id})">+ Log Another Opening</button></div>`:`<button style="width:100%;padding:11px;border-radius:10px;background:var(--wine-light);border:1px solid #d4a0a8;color:var(--wine);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:12px" onclick="logOpened(${w.id})">🔓 Log an Opening</button>`}
+    ${(w.openedLog&&w.openedLog.length)?`<div class="dcard"><div class="dcard-title">Consumption History</div>${w.openedLog.map(o=>`<div class="oe-entry"><div class="oe-top"><span class="oe-date">${fmtDate(o.date)}</span>${o.occasion?`<span class="oe-occ">${esc(o.occasion)}</span>`:''}</div>${o.notes?`<div class="oe-note">${esc(o.notes)}</div>`:''} ${o.pairedWith?`<div class="oe-pair">🍽 ${esc(o.pairedWith)}</div>`:''}</div>`).join('')}<button style="width:100%;padding:9px;border-radius:9px;background:var(--wine-light);border:1px solid #d4a0a8;color:var(--wine);font-weight:600;font-size:13px;cursor:pointer;margin-top:6px" onclick="logOpened(${w.id})">🍾 Open Another Bottle</button></div>`:`<button style="width:100%;padding:11px;border-radius:10px;background:var(--wine-light);border:1px solid #d4a0a8;color:var(--wine);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:12px" onclick="logOpened(${w.id})">🍾 Open Bottle</button>`}
     ${w.notes?`<div class="dcard-title" style="margin-bottom:10px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">Tasting Notes</div><div class="notes-card">"${esc(w.notes)}"</div>`:''}
   </div>`;
 }
@@ -1056,15 +1056,18 @@ function renderLogShipment(clubId){
 }
 
 function renderLogOpened(wineId){
+  const wine=S.wines.find(w=>w.id===wineId);
+  const wineLabel=wine?`${wine.winery}${wine.wineName?' — '+wine.wineName:''}`:'';
   return`<div class="overlay"><div class="sheet">
     <div class="sh-handle"></div>
-    <div class="sh-header"><span class="sh-title">Log an Opening</span><button class="sh-close" onclick="closeOverlay()">×</button></div>
+    <div class="sh-header"><span class="sh-title">Bottle Consumption Log</span><button class="sh-close" onclick="closeOverlay()">×</button></div>
     <div class="sh-body">
+      ${wineLabel?`<div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">${esc(wineLabel)}</div>`:''}
       <div class="fg"><label>Date Opened</label><input class="fi" id="lo_date" type="date" value="${today()}"></div>
-      <div class="fg"><label>Occasion</label><input class="fi" id="lo_occasion" type="text" placeholder="e.g. Anniversary dinner, Tuesday 🙂"></div>
-      <div class="fg"><label>Paired With</label><input class="fi" id="lo_pairedWith" type="text" placeholder="e.g. Braised short rib, mushroom risotto"></div>
-      <div class="fg"><label>How It Showed</label><textarea class="fi" id="lo_notes" rows="4" placeholder="Aromas, palate, evolution in the glass…"></textarea></div>
-      <button class="save-btn" onclick="saveOpenedLog(${wineId})">Save Opening</button>
+      <div class="fg"><label>Occasion</label><input class="fi" id="lo_occasion" type="text" placeholder="e.g. Anniversary dinner, Tuesday 🙂" autocomplete="off" autocorrect="off" autocapitalize="sentences"></div>
+      <div class="fg"><label>Paired With</label><input class="fi" id="lo_pairedWith" type="text" placeholder="e.g. Braised short rib, mushroom risotto" autocomplete="off" autocorrect="off" autocapitalize="sentences"></div>
+      <div class="fg"><label>Taste Notes</label><textarea class="fi" id="lo_notes" rows="4" placeholder="Aromas, palate, evolution in the glass…"></textarea></div>
+      <button class="save-btn" style="background:#b91c1c" onclick="saveOpenedLog(${wineId})">Remove from Cellar</button>
     </div>
   </div></div>`;
 }
@@ -1459,7 +1462,7 @@ function deleteClub(id){
 }
 
 // ══════════════════════════════════════════
-// OPENED LOG
+// BOTTLE CONSUMPTION LOG
 // ══════════════════════════════════════════
 function saveOpenedLog(wineId){
   const g=id=>{const el=document.getElementById(id);return el?(el.tagName==='TEXTAREA'?el.value:el.value.trim()):'';}
@@ -1467,9 +1470,17 @@ function saveOpenedLog(wineId){
   const wine=S.wines.find(w=>w.id===wineId);if(!wine)return;
   if(!wine.openedLog)wine.openedLog=[];
   wine.openedLog.unshift(entry);
-  if(wine.qty>1)wine.qty--;
-  S.wines=S.wines.map(w=>w.id===wineId?wine:w);
-  save();closeOverlay();S.selectedId=wineId;S.view='wineDetail';render();showToast('Opening logged!');
+  wine.qty=Math.max(0,(wine.qty||1)-1);
+  if(wine.qty===0){
+    // Remove from cellar entirely — bottle is consumed
+    S.wines=S.wines.filter(w=>w.id!==wineId);
+    save();closeOverlay();S.view='list';S.tab='cellar';
+    render();showToast('Bottle removed from cellar 🍷');
+  } else {
+    S.wines=S.wines.map(w=>w.id===wineId?wine:w);
+    save();closeOverlay();S.selectedId=wineId;S.view='wineDetail';
+    render();showToast(`Bottle consumed · ${wine.qty} remaining`);
+  }
 }
 
 // ══════════════════════════════════════════
