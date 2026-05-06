@@ -436,6 +436,24 @@ select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .dh-winery{font-family:var(--serif);font-size:24px;font-weight:700;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.35);line-height:1.2}
 .dh-sub{font-size:13px;color:rgba(255,255,255,.8);margin-top:3px}
 
+/* ── WINERY AUTOCOMPLETE ── */
+.winery-wrap{position:relative}
+.winery-dropdown{position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--border2);border-radius:var(--r);box-shadow:var(--sh2);z-index:500;max-height:200px;overflow-y:auto;display:none}
+.winery-dropdown.open{display:block}
+.winery-opt{padding:11px 14px;font-size:14px;color:var(--ink);cursor:pointer;border-bottom:1px solid var(--border)}
+.winery-opt:last-child{border-bottom:none}
+.winery-opt:active{background:var(--wine-light);color:var(--wine)}
+.winery-match{font-weight:700;color:var(--wine)}
+/* ── PER-BOTTLE CELLAR SLOTS ── */
+.bottle-slots-wrap{display:flex;flex-direction:column}
+.bottle-slot{display:grid;grid-template-columns:28px 1fr 1fr 1fr;gap:6px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)}
+.bottle-slot:last-child{border-bottom:none}
+.bottle-slot-num{font-size:11px;font-weight:700;color:var(--muted);text-align:center}
+.bottle-slot input{padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--sans);color:var(--ink);background:#fff;outline:none;width:100%}
+.bottle-slot input:focus{border-color:var(--wine)}
+.bs-col-hdr{display:grid;grid-template-columns:28px 1fr 1fr 1fr;gap:6px;padding-bottom:4px}
+.bs-col-lbl{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;text-align:center}
+
 .detail-body{padding:18px 16px}
 </style>
 </head>
@@ -447,7 +465,8 @@ select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 // CONSTANTS
 // ══════════════════════════════════════════
 const SK='theAllocation_v2';
-const WINE_TYPES=['Red','White','Rosé','Sparkling','Blend','Orange','Dessert','Fortified','Other'];
+const WINE_TYPES=['Red','Red Blend','White','White Blend','Rosé','Sparkling','Dessert','Fortified','Orange','Other'];
+const TYPE_GROUPS={'Red':['Red','Red Blend'],'White':['White','White Blend'],'Rosé':['Rosé'],'Sparkling':['Sparkling']};
 const BLEND_VARS=['Cabernet Sauvignon','Merlot','Pinot Noir','Syrah/Shiraz','Zinfandel','Malbec','Tempranillo','Sangiovese','Grenache','Petit Verdot','Cabernet Franc','Mourvèdre','Carignan','Cinsault','Nebbiolo','Barbera','Chardonnay','Sauvignon Blanc','Riesling','Pinot Grigio','Viognier','Gewürztraminer','Muscat','Roussanne','Marsanne','Petite Sirah','Primitivo'];
 const COUNTRIES=['USA','France','Italy','Spain','Australia','New Zealand','Argentina','Germany','Portugal','Austria','Chile','South Africa','Other'];
 const DECADES=['1970s','1980s','1990s','2000s','2010s','2020s'];
@@ -471,11 +490,11 @@ const S={
   wines:_d.wines||[],tours:_d.tours||[],clubs:_d.clubs||[],
   tab:'home',view:'list',selectedId:null,
   filter:'All',search:'',sortKey:'added',
-  advOpen:false,advFilters:{types:[],countries:[],decades:[],minAbv:'',maxAbv:'',readyOnly:false,hasAlloc:false},
+  advOpen:false,advFilters:{types:[],decades:[],minAbv:'',maxAbv:'',readyOnly:false},
   showInstall:!localStorage.getItem('installDismissed')&&!window.matchMedia('(display-mode: standalone)').matches,
 };
 const FD={};
-function initFD(w){Object.assign(FD,w?JSON.parse(JSON.stringify(w)):{id:null,addedAt:null,image:null,extraPhotos:[],winery:'',wineName:'',vineyard:'',type:'Red',year:'',abv:'',qty:1,pricePaid:'',estValue:'',drinkFrom:'',drinkTo:'',region:'',city:'',state:'',country:'',cellarSection:'',cellarRow:'',cellarSlot:'',notes:'',blend:[],casesProduced:'',farmingMode:'',cooperage:'',oakPct:'',winemakerName:'',winemakerContact:'',discoveredHow:'',allocStatus:'',allocQty:'',allocReleaseDate:'',allocNotes:'',visitLog:[],openedLog:[]});if(!FD.blend)FD.blend=[];if(!FD.visitLog)FD.visitLog=[];if(!FD.openedLog)FD.openedLog=[];if(!FD.extraPhotos)FD.extraPhotos=[];}
+function initFD(w){Object.assign(FD,w?JSON.parse(JSON.stringify(w)):{id:null,addedAt:null,image:null,extraPhotos:[],winery:'',wineName:'',vineyard:'',type:'Red',year:'',abv:'',qty:1,pricePaid:'',estValue:'',drinkFrom:'',drinkTo:'',region:'',cellarSlots:[],cellarSection:'',cellarRow:'',cellarSlot:'',notes:'',blend:[],casesProduced:'',visitLog:[],openedLog:[]});if(!FD.blend)FD.blend=[];if(!FD.visitLog)FD.visitLog=[];if(!FD.openedLog)FD.openedLog=[];if(!FD.extraPhotos)FD.extraPhotos=[];if(!FD.cellarSlots)FD.cellarSlots=[];}
 
 const TFD={};
 function initTFD(t){Object.assign(TFD,t?JSON.parse(JSON.stringify(t)):{id:null,addedAt:null,name:'',date:'',location:'',notes:'',image:null,photos:[],stops:[],totalSpent:''});if(!TFD.photos)TFD.photos=[];}
@@ -492,10 +511,10 @@ const fmtN=n=>n!=null?Number(n).toLocaleString():'—';
 const today=()=>new Date().toISOString().slice(0,10);
 const fmtDate=d=>{if(!d)return'';try{const dt=new Date(d+'T12:00:00');return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){return d;}};
 
-function typeClass(t){return({'Red':'tc-red','White':'tc-white','Rosé':'tc-rose','Sparkling':'tc-sparkling','Blend':'tc-blend'}[t]||'tc-other');}
+function typeClass(t){return({'Red':'tc-red','Red Blend':'tc-red','White':'tc-white','White Blend':'tc-white','Rosé':'tc-rose','Sparkling':'tc-sparkling'}[t]||'tc-other');}
 
 function bottleSVG(type,size=50){
-  const c={'Red':'#8b2635','White':'#b8914a','Rosé':'#c4517a','Sparkling':'#3d7a8b','Blend':'#4a3a8b'}[type]||'#6b6b6b';
+  const c={'Red':'#8b2635','Red Blend':'#8b2635','White':'#b8914a','White Blend':'#b8914a','Rosé':'#c4517a','Sparkling':'#3d7a8b'}[type]||'#6b6b6b';
   return`<svg class="bottle-svg" width="${size}" viewBox="0 0 60 160" fill="none"><rect x="24" y="4" width="12" height="18" rx="3" fill="${c}" opacity=".6"/><path d="M18 22 Q10 40 10 70 L10 140 Q10 154 24 154 L36 154 Q50 154 50 140 L50 70 Q50 40 42 22 Z" fill="${c}" opacity=".45"/><rect x="18" y="72" width="24" height="2" rx="1" fill="white" opacity=".25"/><rect x="20" y="90" width="20" height="22" rx="3" fill="white" opacity=".1"/></svg>`;
 }
 
@@ -527,20 +546,22 @@ function sortWines(wines,key){
 function applyFilters(wines){
   const{filter,search,advFilters:af}=S;
   return wines.filter(w=>{
-    if(filter!=='All'&&w.type!==filter&&!(filter==='Other'&&!['Red','White','Rosé','Sparkling','Blend'].includes(w.type)))return false;
+    if(filter!=='All'){
+      const group=TYPE_GROUPS[filter];
+      if(group){if(!group.includes(w.type))return false;}
+      else if(w.type!==filter)return false;
+    }
     const q=search.toLowerCase();
-    if(q){const fields=[w.winery,w.wineName,w.vineyard,w.region,w.country,w.winemakerName,String(w.year||''),w.cellarSection,w.notes,w.discoveredHow].map(x=>String(x||'').toLowerCase());if(!fields.some(f=>f.includes(q)))return false;}
+    if(q){const fields=[w.winery,w.wineName,w.vineyard,w.region,String(w.year||''),w.cellarSection,w.notes].map(x=>String(x||'').toLowerCase());if(!fields.some(f=>f.includes(q)))return false;}
     if(af.types.length&&!af.types.includes(w.type))return false;
-    if(af.countries.length&&!af.countries.includes(w.country))return false;
     if(af.decades.length){const ds=Math.floor((w.year||0)/10)*10+'s';if(!af.decades.includes(ds))return false;}
     if(af.minAbv&&(w.abv||0)<parseFloat(af.minAbv))return false;
     if(af.maxAbv&&(w.abv||0)>parseFloat(af.maxAbv))return false;
     if(af.readyOnly){const st=drinkStatus(w);if(!st||st.pill!=='dwp-ready')return false;}
-    if(af.hasAlloc&&!w.allocStatus)return false;
     return true;
   });
 }
-function hasAdv(){const af=S.advFilters;return af.types.length||af.countries.length||af.decades.length||af.minAbv||af.maxAbv||af.readyOnly||af.hasAlloc;}
+function hasAdv(){const af=S.advFilters;return af.types.length||af.decades.length||af.minAbv||af.maxAbv||af.readyOnly;}
 
 let toastTimer;
 function showToast(m){const el=document.getElementById('toast');el.textContent=m;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2500);}
@@ -554,7 +575,7 @@ function renderNav(){
     <button class="bntab${S.tab==='home'?' active':''}" onclick="switchTab('home')"><span class="bntab-ico">🏠</span><span class="bntab-lbl">Home</span></button>
     <button class="bntab${S.tab==='cellar'?' active':''}" onclick="switchTab('cellar')"><span class="bntab-ico">🍷</span><span class="bntab-lbl">Cellar</span></button>
     <button class="bntab${S.tab==='tours'?' active':''}" onclick="switchTab('tours')"><span class="bntab-ico">🗺</span><span class="bntab-lbl">Visits</span></button>
-    <button class="bntab${S.tab==='clubs'?' active':''}" onclick="switchTab('clubs')"><span class="bntab-ico">📬</span><span class="bntab-lbl">Clubs</span></button>
+    <button class="bntab${S.tab==='clubs'?' active':''}" onclick="switchTab('clubs')"><span class="bntab-ico">📦</span><span class="bntab-lbl">Clubs</span></button>
   </div>`;
 }
 
@@ -594,11 +615,10 @@ function renderCellar(){
     </div>
     <div class="fpanel${advOpen?' open':''}" id="advPanel">
       <div class="fp-hd">Type</div><div class="fp-chips">${WINE_TYPES.map(t=>`<button class="fchip${af.types.includes(t)?' on':''}" onclick="toggleAFT('${t}')">${t}</button>`).join('')}</div>
-      <div class="fp-hd">Country</div><div class="fp-chips">${COUNTRIES.map(c=>`<button class="fchip${af.countries.includes(c)?' on':''}" onclick="toggleAFC('${esc(c)}')">${c}</button>`).join('')}</div>
       <div class="fp-hd">Decade</div><div class="fp-chips">${DECADES.map(d=>`<button class="fchip${af.decades.includes(d)?' on':''}" onclick="toggleAFD('${d}')">${d}</button>`).join('')}</div>
       <div class="fp-hd">ABV Range</div>
       <div class="fp-row"><div class="fp-f"><label>Min %</label><input id="fpMin" type="number" step=".5" placeholder="12" value="${af.minAbv||''}"></div><div class="fp-f"><label>Max %</label><input id="fpMax" type="number" step=".5" placeholder="15" value="${af.maxAbv||''}"></div></div>
-      <div class="fp-chips" style="margin-bottom:12px"><button class="fchip${af.readyOnly?' on':''}" onclick="toggleAFR()">Ready to Drink</button><button class="fchip${af.hasAlloc?' on':''}" onclick="toggleAFA()">Has Allocation</button></div>
+      <div class="fp-chips" style="margin-bottom:12px"><button class="fchip${af.readyOnly?' on':''}" onclick="toggleAFR()">Ready to Drink</button></div>
       <div class="fp-acts"><button class="fp-clear" onclick="clearAdv()">Clear All</button><button class="fp-apply" onclick="applyAdv()">Apply</button></div>
     </div>
     <div class="sbar"><span class="sbar-ct">${filtered.length} wines · ${tb} bottles${rn?` · ${rn} ready`:''}</span><button class="sbar-btn" onclick="openSort()">⇅ ${sl}</button></div>
@@ -628,12 +648,17 @@ function renderWineDetail(w){
     <div class="chip-bar"><span class="dchip dc-type">${esc(w.type)}</span>${w.year?`<span class="dchip dc-year">${w.year}</span>`:''} ${w.abv?`<span class="dchip dc-abv">${w.abv}% ABV</span>`:''} ${(w.qty||1)>1?`<span class="dchip dc-qty">×${w.qty} bottles</span>`:''} ${loc?`<span class="dchip dc-loc">${esc(loc)}</span>`:''} ${w.allocStatus?`<span class="dchip dc-alloc">Alloc ${esc(w.allocStatus)}</span>`:''}</div>
     ${(w.pricePaid!=null||w.estValue!=null)?`<div class="dcard"><div class="dcard-title">Value</div><div class="val-grid">${w.pricePaid!=null?`<div class="val-box paid"><div class="vb-lbl">Paid/btl</div><div class="vb-amt">${fmt$(w.pricePaid)}</div>${(w.qty||1)>1?`<div class="vb-sub">${fmt$(tP)} total</div>`:''}</div>`:''} ${w.estValue!=null?`<div class="val-box est"><div class="vb-lbl">Est. value/btl</div><div class="vb-amt">${fmt$(w.estValue)}</div>${(w.qty||1)>1?`<div class="vb-sub">${fmt$(tE)} total</div>`:''}</div>`:''}</div>${gP!=null?`<div style="font-size:13px;font-weight:600;color:${gP>=0?'#2d6a4f':'#b91c1c'}">${gP>=0?'▲ Up':'▼ Down'} ${Math.abs(gP)}% vs. purchase price</div>`:''}</div>`:''}
     ${drinkHTML}
-    ${loc?`<div class="dcard"><div class="dcard-title">Cellar Location</div><div class="cellar-loc"><span class="cellar-ico">🗄️</span><div><div class="cellar-sect">${esc(w.cellarSection||'—')}</div><div class="cellar-sub">${esc([w.cellarRow&&`Row ${w.cellarRow}`,w.cellarSlot&&`Slot ${w.cellarSlot}`].filter(Boolean).join(' · ')||'No row/slot')}</div></div></div></div>`:''}
+    ${(w.cellarSlots&&w.cellarSlots.some(s=>s.section||s.row||s.slot))||(w.cellarSection)?`<div class="dcard"><div class="dcard-title">Cellar Location</div>${
+      (w.cellarSlots&&w.cellarSlots.length>1)?
+        `<div style="display:flex;flex-direction:column;gap:6px">${w.cellarSlots.map((s,i)=>(s.section||s.row||s.slot)?`<div style="display:flex;align-items:center;gap:10px"><div style="font-size:11px;font-weight:700;color:var(--muted);min-width:36px">Btl ${i+1}</div><div class="cellar-loc" style="flex:1;padding:8px 12px"><span class="cellar-ico">🗄️</span><div><div class="cellar-sect">${esc(s.section||'—')}</div><div class="cellar-sub">${esc([s.row&&`Row ${s.row}`,s.slot&&`Slot ${s.slot}`].filter(Boolean).join(' · ')||'')}</div></div></div></div>`:''
+        ).filter(Boolean).join('')}</div>`
+      :`<div class="cellar-loc"><span class="cellar-ico">🗄️</span><div><div class="cellar-sect">${esc(w.cellarSection||'—')}</div><div class="cellar-sub">${esc([w.cellarRow&&`Row ${w.cellarRow}`,w.cellarSlot&&`Slot ${w.cellarSlot}`].filter(Boolean).join(' · ')||'No row/slot')}</div></div></div>`
+    }</div>`:''}
     <div class="dcard"><div class="dcard-title">Winery & Origin</div><div class="kv">${w.vineyard?`<span class="kv-k">Vineyard</span><span class="kv-v">${esc(w.vineyard)}</span>`:''} ${w.region?`<span class="kv-k">Region</span><span class="kv-v">${esc(w.region)}</span>`:''} ${w.city?`<span class="kv-k">City</span><span class="kv-v">${esc(w.city)}${w.state?`, ${esc(w.state)}`:''}</span>`:''} ${w.country?`<span class="kv-k">Country</span><span class="kv-v">${esc(w.country)}</span>`:''} ${w.winemakerName?`<span class="kv-k">Winemaker</span><span class="kv-v">${esc(w.winemakerName)}</span>`:''} ${w.winemakerContact?`<span class="kv-k">Contact</span><span class="kv-v">${esc(w.winemakerContact)}</span>`:''} ${w.discoveredHow?`<span class="kv-k">Discovered</span><span class="kv-v">${esc(w.discoveredHow)}</span>`:''}</div></div>
     ${(w.casesProduced||w.farmingMode||w.cooperage||w.oakPct)?`<div class="dcard"><div class="dcard-title">Production</div><div class="kv">${w.casesProduced?`<span class="kv-k">Cases</span><span class="kv-v">${fmtN(w.casesProduced)}</span>`:''} ${w.farmingMode?`<span class="kv-k">Farming</span><span class="kv-v">${esc(w.farmingMode)}</span>`:''} ${w.cooperage?`<span class="kv-k">Cooperage</span><span class="kv-v">${esc(w.cooperage)}</span>`:''} ${w.oakPct?`<span class="kv-k">New oak</span><span class="kv-v">${w.oakPct}%</span>`:''}</div></div>`:''}
     ${w.allocStatus?`<div class="dcard"><div class="dcard-title">Allocation</div><div class="alloc-item"><div class="kv"><span class="kv-k">Status</span><span class="kv-v"><span class="as-pill as-${esc(w.allocStatus)}">${esc(w.allocStatus)}</span></span>${w.allocQty?`<span class="kv-k">Qty</span><span class="kv-v">${w.allocQty} bottles</span>`:''} ${w.allocReleaseDate?`<span class="kv-k">Release</span><span class="kv-v">${esc(w.allocReleaseDate)}</span>`:''} ${w.allocNotes?`<span class="kv-k">Notes</span><span class="kv-v">${esc(w.allocNotes)}</span>`:''}</div></div></div>`:''}
     ${(w.type==='Blend'&&w.blend&&w.blend.length)?`<div class="dcard"><div class="dcard-title">Blend</div>${w.blend.map(b=>`<div class="bv-row"><div class="bv-label"><span>${esc(b.variety)}</span><span>${b.pct}%</span></div><div class="bv-track"><div class="bv-fill" style="width:${b.pct}%"></div></div></div>`).join('')}</div>`:''}
-    ${(w.openedLog&&w.openedLog.length)?`<div class="dcard"><div class="dcard-title">Bottles Opened</div>${w.openedLog.map(o=>`<div class="oe-entry"><div class="oe-top"><span class="oe-date">${fmtDate(o.date)}</span>${o.occasion?`<span class="oe-occ">${esc(o.occasion)}</span>`:''}</div>${o.notes?`<div class="oe-note">${esc(o.notes)}</div>`:''} ${o.pairedWith?`<div class="oe-pair">🍽 ${esc(o.pairedWith)}</div>`:''}</div>`).join('')}<button style="width:100%;padding:9px;border-radius:9px;background:var(--wine-light);border:1px solid #d4a0a8;color:var(--wine);font-weight:600;font-size:13px;cursor:pointer;margin-top:6px" onclick="logOpened(${w.id})">+ Log Another Opening</button></div>`:`<button style="width:100%;padding:11px;border-radius:10px;background:var(--wine-light);border:1px solid #d4a0a8;color:var(--wine);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:12px" onclick="logOpened(${w.id})">🔓 Log an Opening</button>`}
+    ${(w.openedLog&&w.openedLog.length)?`<div class="dcard"><div class="dcard-title">Consumption History</div>${w.openedLog.map(o=>`<div class="oe-entry"><div class="oe-top"><span class="oe-date">${fmtDate(o.date)}</span>${o.occasion?`<span class="oe-occ">${esc(o.occasion)}</span>`:''}</div>${o.notes?`<div class="oe-note">${esc(o.notes)}</div>`:''} ${o.pairedWith?`<div class="oe-pair">🍽 ${esc(o.pairedWith)}</div>`:''}</div>`).join('')}<button style="width:100%;padding:9px;border-radius:9px;background:var(--wine-light);border:1px solid #d4a0a8;color:var(--wine);font-weight:600;font-size:13px;cursor:pointer;margin-top:6px" onclick="logOpened(${w.id})">🍾 Open Another Bottle</button></div>`:`<button style="width:100%;padding:11px;border-radius:10px;background:var(--wine-light);border:1px solid #d4a0a8;color:var(--wine);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:12px" onclick="logOpened(${w.id})">🍾 Open Bottle</button>`}
     ${w.notes?`<div class="dcard-title" style="margin-bottom:10px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">Tasting Notes</div><div class="notes-card">"${esc(w.notes)}"</div>`:''}
   </div>`;
 }
@@ -810,7 +835,9 @@ function renderClubDetail(c){
 // RENDER FORMS (no oninput re-renders)
 // ══════════════════════════════════════════
 function renderWineForm(){
-  const f=FD,yr=new Date().getFullYear(),iB=f.type==='Blend';
+  const f=FD,yr=new Date().getFullYear(),iB=(f.type==='Red Blend'||f.type==='White Blend');
+  const qty=parseInt(f.qty)||1;
+  const slots=f.cellarSlots&&f.cellarSlots.length===qty?f.cellarSlots:Array.from({length:qty},(_,i)=>f.cellarSlots?.[i]||{section:f.cellarSection||'',row:f.cellarRow||'',slot:f.cellarSlot||''});
   return`<div class="overlay" id="formOverlay"><div class="sheet" id="formSheet">
     <div class="sh-handle"></div>
     <div class="sh-header"><span class="sh-title">${f.id?'Edit Bottle':'New Bottle'}</span><button class="sh-close" onclick="closeOverlay()">×</button></div>
@@ -823,34 +850,40 @@ function renderWineForm(){
         <div style="margin-top:8px">
           <div style="font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Additional photos <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
           <div style="display:flex;gap:8px">
-            <div id="extraPhoto1" style="width:70px;height:70px;border-radius:10px;background:var(--cream);border:1.5px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;flex-shrink:0;color:var(--muted)" onclick="document.getElementById('extraPhotoInput1').click()">+
-              <input type="file" id="extraPhotoInput1" accept="image/*" capture="environment" style="display:none" onchange="handleExtraPhoto(this,'extraPhoto1',0)">
+            <div id="extraPhoto1" style="width:70px;height:70px;border-radius:10px;background:var(--cream);border:1.5px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;flex-shrink:0;color:var(--muted)" onclick="document.getElementById('extraPhotoInput1').click()">
+              ${f.extraPhotos&&f.extraPhotos[0]?`<img src="${f.extraPhotos[0]}" style="width:100%;height:100%;object-fit:cover;border-radius:10px">`:'+'}<input type="file" id="extraPhotoInput1" accept="image/*" capture="environment" style="display:none" onchange="handleExtraPhoto(this,'extraPhoto1',0)">
             </div>
-            <div id="extraPhoto2" style="width:70px;height:70px;border-radius:10px;background:var(--cream);border:1.5px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;flex-shrink:0;color:var(--muted)" onclick="document.getElementById('extraPhotoInput2').click()">+
-              <input type="file" id="extraPhotoInput2" accept="image/*" capture="environment" style="display:none" onchange="handleExtraPhoto(this,'extraPhoto2',1)">
+            <div id="extraPhoto2" style="width:70px;height:70px;border-radius:10px;background:var(--cream);border:1.5px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;flex-shrink:0;color:var(--muted)" onclick="document.getElementById('extraPhotoInput2').click()">
+              ${f.extraPhotos&&f.extraPhotos[1]?`<img src="${f.extraPhotos[1]}" style="width:100%;height:100%;object-fit:cover;border-radius:10px">`:'+'}<input type="file" id="extraPhotoInput2" accept="image/*" capture="environment" style="display:none" onchange="handleExtraPhoto(this,'extraPhoto2',1)">
             </div>
             <div style="display:flex;align-items:center;font-size:12px;color:var(--muted);padding-left:4px;line-height:1.5">Bottle shot,<br>back label, etc.</div>
           </div>
         </div>
       </div>
+
       <div class="fsect"><span>Identity & Origin</span></div>
-      <div class="fg"><label>Winery Name *</label><input class="fi" id="f_winery" type="text" placeholder="e.g. Littorai, Radio-Coteau" value="${esc(f.winery||'')}" autocomplete="off" autocorrect="off" autocapitalize="words"></div>
-      <div class="fg"><label>Wine Name / Label</label><input class="fi" id="f_wineName" type="text" placeholder="e.g. The Haven, Platt Vineyard" value="${esc(f.wineName||'')}" autocomplete="off" autocorrect="off" autocapitalize="words"></div>
-      <div class="fg"><label>Vineyard</label><input class="fi" id="f_vineyard" type="text" placeholder="e.g. Hirsch, Charles Heintz" value="${esc(f.vineyard||'')}" autocomplete="off" autocorrect="off" autocapitalize="words"></div>
+      <div class="fg">
+        <label>Winery Name *</label>
+        <div class="winery-wrap">
+          <input class="fi" id="f_winery" type="text" placeholder="e.g. Page Springs Cellars" value="${esc(f.winery||'')}"
+            autocomplete="off" autocorrect="off" autocapitalize="words"
+            oninput="wineryAutocomplete(this.value)" onfocus="wineryAutocomplete(this.value)" onblur="setTimeout(()=>closeWineryDD(),200)">
+          <div class="winery-dropdown" id="wineryDD"></div>
+        </div>
+      </div>
+      <div class="fg"><label>Wine Name / Label</label><input class="fi" id="f_wineName" type="text" placeholder="e.g. El Serrano, Cowboy Red" value="${esc(f.wineName||'')}" autocomplete="off" autocorrect="off" autocapitalize="words"></div>
+      <div class="fg"><label>Vineyard</label><input class="fi" id="f_vineyard" type="text" placeholder="e.g. Doelle, Nanzini" value="${esc(f.vineyard||'')}" autocomplete="off" autocorrect="off" autocapitalize="words"></div>
       <div class="fgrow">
         <div class="fg"><label>Type *</label><select class="fi" id="f_type" onchange="onTypeChange(this.value)">${WINE_TYPES.map(t=>`<option${f.type===t?' selected':''}>${t}</option>`).join('')}</select></div>
         <div class="fg"><label>Vintage *</label><input class="fi" id="f_year" type="number" placeholder="${yr-1}" value="${f.year||''}" inputmode="numeric"></div>
       </div>
       <div class="fgrow">
         <div class="fg"><label>ABV %</label><input class="fi" id="f_abv" type="number" step=".1" placeholder="13.5" value="${f.abv||''}" inputmode="decimal"></div>
-        <div class="fg"><label>Qty in Cellar *</label><input class="fi" id="f_qty" type="number" min="1" placeholder="1" value="${f.qty||1}" inputmode="numeric"></div>
+        <div class="fg"><label>Qty in Cellar *</label><input class="fi" id="f_qty" type="number" min="1" placeholder="1" value="${f.qty||1}" inputmode="numeric" onchange="updateBottleSlots(this.value)"></div>
       </div>
-      <div class="fgrow">
-        <div class="fg"><label>Region / Appellation</label><input class="fi" id="f_region" type="text" placeholder="e.g. Sonoma Coast" value="${esc(f.region||'')}" autocomplete="off"></div>
-        <div class="fg"><label>Country</label><input class="fi" id="f_country" type="text" placeholder="USA" value="${esc(f.country||'')}" autocomplete="off"></div>
-      </div>
+      <div class="fg"><label>Region</label><input class="fi" id="f_region" type="text" placeholder="e.g. Verde Valley, Sonoma Coast" value="${esc(f.region||'')}" autocomplete="off"></div>
 
-      <!-- PRICING (collapsible) -->
+      <!-- PRICING & VALUE (collapsible) -->
       <div class="fcoll-hdr" onclick="toggleFColl('pricing')">
         <span class="fcoll-title">Pricing & Value</span>
         <span class="fcoll-arrow" id="fcoll-arr-pricing">›</span>
@@ -864,71 +897,39 @@ function renderWineForm(){
           <div class="fg"><label>Drink From</label><input class="fi" id="f_drinkFrom" type="number" placeholder="${yr}" value="${f.drinkFrom||''}" inputmode="numeric"></div>
           <div class="fg"><label>Drink By</label><input class="fi" id="f_drinkTo" type="number" placeholder="${yr+8}" value="${f.drinkTo||''}" inputmode="numeric"></div>
         </div>
+        <div class="fg"><label>Cases Produced</label><input class="fi" id="f_casesProduced" type="number" placeholder="e.g. 250" value="${f.casesProduced||''}" inputmode="numeric"></div>
       </div>
 
-      <!-- PRODUCTION (collapsible) -->
-      <div class="fcoll-hdr" onclick="toggleFColl('production')">
-        <span class="fcoll-title">Production Details</span>
-        <span class="fcoll-arrow" id="fcoll-arr-production">›</span>
-      </div>
-      <div class="fcoll-body" id="fcoll-body-production">
-        <div class="fgrow">
-          <div class="fg"><label>Cases Produced</label><input class="fi" id="f_casesProduced" type="number" placeholder="250" value="${f.casesProduced||''}" inputmode="numeric"></div>
-          <div class="fg"><label>Farming</label><select class="fi" id="f_farmingMode"><option value="">—</option>${FARM_MODES.map(m=>`<option${f.farmingMode===m?' selected':''}>${m}</option>`).join('')}</select></div>
-        </div>
-        <div class="fgrow">
-          <div class="fg"><label>Cooperage</label><input class="fi" id="f_cooperage" type="text" placeholder="e.g. Taransaud" value="${esc(f.cooperage||'')}" autocomplete="off"></div>
-          <div class="fg"><label>New Oak %</label><input class="fi" id="f_oakPct" type="number" min="0" max="100" placeholder="30" value="${f.oakPct||''}" inputmode="numeric"></div>
-        </div>
-        <div class="fg"><label>City / Village</label><input class="fi" id="f_city" type="text" placeholder="Sebastopol" value="${esc(f.city||'')}" autocomplete="off"></div>
-        <div class="fg"><label>State</label><input class="fi" id="f_state" type="text" placeholder="CA" value="${esc(f.state||'')}" autocomplete="off"></div>
-      </div>
-
-      <!-- WINEMAKER (collapsible) -->
-      <div class="fcoll-hdr" onclick="toggleFColl('winemaker')">
-        <span class="fcoll-title">Winemaker & Discovery</span>
-        <span class="fcoll-arrow" id="fcoll-arr-winemaker">›</span>
-      </div>
-      <div class="fcoll-body" id="fcoll-body-winemaker">
-        <div class="fg"><label>Winemaker Name</label><input class="fi" id="f_winemakerName" type="text" placeholder="e.g. Ted Lemon" value="${esc(f.winemakerName||'')}" autocomplete="off" autocapitalize="words"></div>
-        <div class="fg"><label>Contact / Mailing List Email</label><input class="fi" id="f_winemakerContact" type="text" placeholder="allocations@winery.com" value="${esc(f.winemakerContact||'')}" autocomplete="off"></div>
-        <div class="fg"><label>How I Discovered This Wine</label><input class="fi" id="f_discoveredHow" type="text" placeholder="e.g. Tasting room, friend's rec" value="${esc(f.discoveredHow||'')}" autocomplete="off"></div>
-      </div>
-
-      <!-- ALLOCATION (collapsible) -->
-      <div class="fcoll-hdr" onclick="toggleFColl('allocation')">
-        <span class="fcoll-title">Allocation</span>
-        <span class="fcoll-arrow" id="fcoll-arr-allocation">›</span>
-      </div>
-      <div class="fcoll-body" id="fcoll-body-allocation">
-        <div class="fgrow">
-          <div class="fg"><label>Status</label><select class="fi" id="f_allocStatus"><option value="">None</option>${ALLOC_STATI.map(s=>`<option${f.allocStatus===s?' selected':''}>${s}</option>`).join('')}</select></div>
-          <div class="fg"><label>Allocated Qty</label><input class="fi" id="f_allocQty" type="number" placeholder="bottles" value="${f.allocQty||''}" inputmode="numeric"></div>
-        </div>
-        <div class="fg"><label>Release / Window Date</label><input class="fi" id="f_allocReleaseDate" type="text" placeholder="e.g. Spring 2026" value="${esc(f.allocReleaseDate||'')}" autocomplete="off"></div>
-        <div class="fg"><label>Allocation Notes</label><input class="fi" id="f_allocNotes" type="text" placeholder="e.g. Mailing list since 2019, 3-bottle max" value="${esc(f.allocNotes||'')}" autocomplete="off"></div>
-      </div>
-
-      <!-- CELLAR LOCATION (collapsible) -->
+      <!-- CELLAR LOCATION (collapsible) — per-bottle slots -->
       <div class="fcoll-hdr" onclick="toggleFColl('cellarloc')">
         <span class="fcoll-title">Cellar Location</span>
         <span class="fcoll-arrow" id="fcoll-arr-cellarloc">›</span>
       </div>
       <div class="fcoll-body" id="fcoll-body-cellarloc">
-        <div class="fg"><label>Section / Rack</label><input class="fi" id="f_cellarSection" type="text" placeholder="e.g. Rack A" value="${esc(f.cellarSection||'')}" autocomplete="off"></div>
-        <div class="fgrow">
-          <div class="fg"><label>Row</label><input class="fi" id="f_cellarRow" type="text" placeholder="3" value="${esc(f.cellarRow||'')}" autocomplete="off"></div>
-          <div class="fg"><label>Slot</label><input class="fi" id="f_cellarSlot" type="text" placeholder="12" value="${esc(f.cellarSlot||'')}" autocomplete="off"></div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Each bottle can have its own rack location. Updating qty above adds or removes rows.</div>
+        <div class="bs-col-hdr">
+          <div class="bs-col-lbl">#</div>
+          <div class="bs-col-lbl">Section</div>
+          <div class="bs-col-lbl">Row</div>
+          <div class="bs-col-lbl">Slot</div>
+        </div>
+        <div class="bottle-slots-wrap" id="bottleSlotsWrap">
+          ${slots.map((s,i)=>`<div class="bottle-slot">
+            <div class="bottle-slot-num">${i+1}</div>
+            <input type="text" placeholder="Rack A" value="${esc(s.section||'')}" autocomplete="off" data-slot="${i}" data-f="section">
+            <input type="text" placeholder="Row" value="${esc(s.row||'')}" autocomplete="off" data-slot="${i}" data-f="row">
+            <input type="text" placeholder="Slot" value="${esc(s.slot||'')}" autocomplete="off" data-slot="${i}" data-f="slot">
+          </div>`).join('')}
         </div>
       </div>
 
       <div id="blendSection" style="display:${iB?'block':'none'}">
-        <div class="fsect"><span>Blend</span></div>
+        <div class="fsect"><span>Blend Varieties</span></div>
         <div id="blendRows"></div>
         <div id="blendTotal" class="blend-total" style="display:none"></div>
         <button class="add-variety" onclick="addBlend()">+ Add Grape Variety</button>
       </div>
-      <div class="fsect"><span>Tasting Notes</span></div>
+      <div class="fsect"><span>My Notes</span></div>
       <div class="fg"><textarea class="fi" id="f_notes" rows="4" placeholder="Aromas, palate, finish, food pairings…">${esc(f.notes||'')}</textarea></div>
       <button class="save-btn" onclick="saveWineForm()">${f.id?'Save Changes':'Add to Cellar'}</button>
     </div>
@@ -1058,15 +1059,18 @@ function renderLogShipment(clubId){
 }
 
 function renderLogOpened(wineId){
+  const wine=S.wines.find(w=>w.id===wineId);
+  const wineLabel=wine?`${wine.winery}${wine.wineName?' — '+wine.wineName:''}`:'';
   return`<div class="overlay"><div class="sheet">
     <div class="sh-handle"></div>
-    <div class="sh-header"><span class="sh-title">Log an Opening</span><button class="sh-close" onclick="closeOverlay()">×</button></div>
+    <div class="sh-header"><span class="sh-title">Bottle Consumption Log</span><button class="sh-close" onclick="closeOverlay()">×</button></div>
     <div class="sh-body">
+      ${wineLabel?`<div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">${esc(wineLabel)}</div>`:''}
       <div class="fg"><label>Date Opened</label><input class="fi" id="lo_date" type="date" value="${today()}"></div>
-      <div class="fg"><label>Occasion</label><input class="fi" id="lo_occasion" type="text" placeholder="e.g. Anniversary dinner, Tuesday 🙂"></div>
-      <div class="fg"><label>Paired With</label><input class="fi" id="lo_pairedWith" type="text" placeholder="e.g. Braised short rib, mushroom risotto"></div>
-      <div class="fg"><label>How It Showed</label><textarea class="fi" id="lo_notes" rows="4" placeholder="Aromas, palate, evolution in the glass…"></textarea></div>
-      <button class="save-btn" onclick="saveOpenedLog(${wineId})">Save Opening</button>
+      <div class="fg"><label>Occasion</label><input class="fi" id="lo_occasion" type="text" placeholder="e.g. Anniversary dinner, Tuesday 🙂" autocomplete="off" autocorrect="off" autocapitalize="sentences"></div>
+      <div class="fg"><label>Paired With</label><input class="fi" id="lo_pairedWith" type="text" placeholder="e.g. Braised short rib, mushroom risotto" autocomplete="off" autocorrect="off" autocapitalize="sentences"></div>
+      <div class="fg"><label>Taste Notes</label><textarea class="fi" id="lo_notes" rows="4" placeholder="Aromas, palate, evolution in the glass…"></textarea></div>
+      <button class="save-btn" style="background:#b91c1c" onclick="saveOpenedLog(${wineId})">Remove from Cellar</button>
     </div>
   </div></div>`;
 }
@@ -1088,7 +1092,7 @@ function renderCellarSettings(){
       <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;margin-top:8px">Export Collection</div>
       <div style="background:var(--cream);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;margin-bottom:20px">
         <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between">
-          <div><div style="font-size:14px;font-weight:600">${wines.length} wines · ${tb} bottles</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${te>0?`Est. value ${fmt$(te)}`:'No value set'}</div></div>
+          <div><div style="font-size:14px;font-weight:600">${wines.length} wine${wines.length!==1?'s':''} · ${tb} bottle${tb!==1?'s':''}</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${te>0?`Est. value ${fmt$(te)}`:'No value set'}</div></div>
         </div>
         <button onclick="exportCSV()" style="width:100%;padding:14px 16px;background:none;border:none;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;cursor:pointer;font-family:var(--sans);text-align:left">
           <span style="font-size:22px">📊</span>
@@ -1096,7 +1100,7 @@ function renderCellarSettings(){
         </button>
         <button onclick="exportJSON()" style="width:100%;padding:14px 16px;background:none;border:none;display:flex;align-items:center;gap:12px;cursor:pointer;font-family:var(--sans);text-align:left">
           <span style="font-size:22px">📋</span>
-          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Export as JSON</div><div style="font-size:12px;color:var(--muted)">Full backup including all data & history</div></div>
+          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Export as JSON</div><div style="font-size:12px;color:var(--muted)">Full backup including all data &amp; history</div></div>
         </button>
       </div>
     </div>
@@ -1264,20 +1268,82 @@ function toggleAFD(d){const a=S.advFilters.decades,i=a.indexOf(d);i>=0?a.splice(
 function toggleAFR(){S.advFilters.readyOnly=!S.advFilters.readyOnly;render();}
 function toggleAFA(){S.advFilters.hasAlloc=!S.advFilters.hasAlloc;render();}
 function applyAdv(){const mn=document.getElementById('fpMin'),mx=document.getElementById('fpMax');if(mn)S.advFilters.minAbv=mn.value;if(mx)S.advFilters.maxAbv=mx.value;S.advOpen=false;render();}
-function clearAdv(){S.advFilters={types:[],countries:[],decades:[],minAbv:'',maxAbv:'',readyOnly:false,hasAlloc:false};render();}
+function clearAdv(){S.advFilters={types:[],decades:[],minAbv:'',maxAbv:'',readyOnly:false};render();}
 
 // ══════════════════════════════════════════
 // BLEND
 // ══════════════════════════════════════════
 function refreshBlendRows(){const c=document.getElementById('blendRows');if(!c)return;c.innerHTML=FD.blend.map((b,i)=>`<div class="blend-row-f"><select class="fi" id="bv${i}" onchange="FD.blend[${i}].variety=this.value"><option value="">Select variety</option>${BLEND_VARS.map(v=>`<option${b.variety===v?' selected':''}>${esc(v)}</option>`).join('')}</select><input class="fi blend-pct" id="bp${i}" type="number" min="0" max="100" placeholder="%" value="${b.pct||''}"><button class="blend-rm" onclick="removeBlend(${i})">×</button></div>`).join('');updateBlendTotal();}
 function updateBlendTotal(){const el=document.getElementById('blendTotal');if(!el)return;FD.blend.forEach((b,i)=>{const e=document.getElementById(`bp${i}`);if(e)b.pct=e.value;});const t=FD.blend.reduce((s,b)=>s+(parseFloat(b.pct)||0),0);if(t>0){el.style.display='block';el.style.color=t===100?'#2d6a4f':'#b91c1c';el.textContent=`Total: ${t}% ${t===100?'✓':'(must equal 100%)'}`;}else el.style.display='none';}
-function onTypeChange(v){FD.type=v;const s=document.getElementById('blendSection');if(s)s.style.display=v==='Blend'?'block':'none';if(v==='Blend'&&FD.blend.length===0)FD.blend.push({variety:'',pct:''});refreshBlendRows();}
+function onTypeChange(v){FD.type=v;const s=document.getElementById('blendSection');if(s)s.style.display=(v==='Red Blend'||v==='White Blend')?'block':'none';if((v==='Red Blend'||v==='White Blend')&&FD.blend.length===0)FD.blend.push({variety:'',pct:''});refreshBlendRows();}
 function addBlend(){FD.blend.forEach((b,i)=>{const e=document.getElementById(`bp${i}`);if(e)b.pct=e.value;const ev=document.getElementById(`bv${i}`);if(ev)b.variety=ev.value;});FD.blend.push({variety:'',pct:''});refreshBlendRows();}
 function removeBlend(i){FD.blend.forEach((b,j)=>{const e=document.getElementById(`bp${j}`);if(e)b.pct=e.value;const ev=document.getElementById(`bv${j}`);if(ev)b.variety=ev.value;});FD.blend.splice(i,1);refreshBlendRows();}
 
 // ══════════════════════════════════════════
 // PHOTO
 // ══════════════════════════════════════════
+// ══════════════════════════════════════════
+// WINERY AUTOCOMPLETE
+// ══════════════════════════════════════════
+function getKnownWineries(){
+  const set=new Set();
+  S.wines.forEach(w=>{if(w.winery)set.add(w.winery);});
+  S.clubs.forEach(c=>{if(c.winery)set.add(c.winery);});
+  return[...set].sort((a,b)=>a.localeCompare(b));
+}
+function wineryAutocomplete(val){
+  const dd=document.getElementById('wineryDD');if(!dd)return;
+  const q=(val||'').trim().toLowerCase();
+  if(!q){dd.classList.remove('open');return;}
+  const matches=getKnownWineries().filter(w=>w.toLowerCase().includes(q)&&w.toLowerCase()!==q);
+  if(!matches.length){dd.classList.remove('open');return;}
+  dd.innerHTML=matches.slice(0,8).map(w=>{
+    const idx=w.toLowerCase().indexOf(q);
+    const hi=w.slice(0,idx)+`<span class="winery-match">${w.slice(idx,idx+q.length)}</span>`+w.slice(idx+q.length);
+    return`<div class="winery-opt" onmousedown="selectWinery('${esc(w)}')">${hi}</div>`;
+  }).join('');
+  dd.classList.add('open');
+}
+function selectWinery(name){
+  const inp=document.getElementById('f_winery');
+  if(inp)inp.value=name;
+  FD.winery=name;
+  closeWineryDD();
+}
+function closeWineryDD(){
+  const dd=document.getElementById('wineryDD');
+  if(dd)dd.classList.remove('open');
+}
+
+// ══════════════════════════════════════════
+// PER-BOTTLE CELLAR SLOTS
+// ══════════════════════════════════════════
+function updateBottleSlots(newQty){
+  const qty=Math.max(1,parseInt(newQty)||1);
+  const wrap=document.getElementById('bottleSlotsWrap');if(!wrap)return;
+  const existing=[];
+  wrap.querySelectorAll('.bottle-slot').forEach((row,i)=>{
+    const inputs=row.querySelectorAll('input');
+    existing[i]={section:inputs[0]?.value||'',row:inputs[1]?.value||'',slot:inputs[2]?.value||''};
+  });
+  const slots=Array.from({length:qty},(_,i)=>existing[i]||{section:existing[0]?.section||'',row:'',slot:''});
+  wrap.innerHTML=slots.map((s,i)=>`<div class="bottle-slot">
+    <div class="bottle-slot-num">${i+1}</div>
+    <input type="text" placeholder="Rack A" value="${esc(s.section)}" autocomplete="off">
+    <input type="text" placeholder="Row" value="${esc(s.row)}" autocomplete="off">
+    <input type="text" placeholder="Slot" value="${esc(s.slot)}" autocomplete="off">
+  </div>`).join('');
+}
+function readBottleSlots(){
+  const wrap=document.getElementById('bottleSlotsWrap');if(!wrap)return[];
+  const slots=[];
+  wrap.querySelectorAll('.bottle-slot').forEach(row=>{
+    const inputs=row.querySelectorAll('input');
+    slots.push({section:inputs[0]?.value.trim()||'',row:inputs[1]?.value.trim()||'',slot:inputs[2]?.value.trim()||''});
+  });
+  return slots;
+}
+
 function toggleFColl(key){
   const body=document.getElementById('fcoll-body-'+key);
   const arrow=document.getElementById('fcoll-arr-'+key);
@@ -1363,10 +1429,33 @@ function handlePhoto(input,zoneId,mode){
 // ══════════════════════════════════════════
 function saveWineForm(){
   const g=id=>{const el=document.getElementById(id);return el?(el.tagName==='TEXTAREA'?el.value:el.value.trim()):'';}
-  const winery=g('f_winery');if(!winery){alert('Winery name is required');return;}
+  const winery=g('f_winery')||FD.winery;if(!winery){alert('Winery name is required');return;}
   const typeEl=document.getElementById('f_type'),type=typeEl?typeEl.value:FD.type;
   FD.blend.forEach((b,i)=>{const e=document.getElementById(`bp${i}`);if(e)b.pct=e.value;const ev=document.getElementById(`bv${i}`);if(ev)b.variety=ev.value;});
-  const wine={id:FD.id||Date.now(),addedAt:FD.addedAt||Date.now(),image:FD.image||null,extraPhotos:FD.extraPhotos||[],winery,wineName:g('f_wineName'),vineyard:g('f_vineyard'),type,year:parseInt(g('f_year'))||null,abv:parseFloat(g('f_abv'))||null,qty:parseInt(g('f_qty'))||1,pricePaid:parseFloat(g('f_pricePaid'))||null,estValue:parseFloat(g('f_estValue'))||null,drinkFrom:parseInt(g('f_drinkFrom'))||null,drinkTo:parseInt(g('f_drinkTo'))||null,region:g('f_region'),city:g('f_city'),state:g('f_state'),country:g('f_country'),cellarSection:g('f_cellarSection'),cellarRow:g('f_cellarRow'),cellarSlot:g('f_cellarSlot'),notes:g('f_notes'),blend:type==='Blend'?FD.blend.filter(b=>b.variety):[],casesProduced:parseInt(g('f_casesProduced'))||null,farmingMode:g('f_farmingMode'),cooperage:g('f_cooperage'),oakPct:parseFloat(g('f_oakPct'))||null,winemakerName:g('f_winemakerName'),winemakerContact:g('f_winemakerContact'),discoveredHow:g('f_discoveredHow'),allocStatus:g('f_allocStatus'),allocQty:parseInt(g('f_allocQty'))||null,allocReleaseDate:g('f_allocReleaseDate'),allocNotes:g('f_allocNotes'),visitLog:FD.visitLog||[],openedLog:FD.openedLog||[]};
+  const cellarSlots=readBottleSlots();
+  const firstSlot=cellarSlots[0]||{};
+  const wine={
+    id:FD.id||Date.now(),addedAt:FD.addedAt||Date.now(),
+    image:FD.image||null,extraPhotos:FD.extraPhotos||[],
+    winery,wineName:g('f_wineName'),vineyard:g('f_vineyard'),
+    type,year:parseInt(g('f_year'))||null,abv:parseFloat(g('f_abv'))||null,
+    qty:parseInt(g('f_qty'))||1,
+    pricePaid:parseFloat(g('f_pricePaid'))||null,estValue:parseFloat(g('f_estValue'))||null,
+    drinkFrom:parseInt(g('f_drinkFrom'))||null,drinkTo:parseInt(g('f_drinkTo'))||null,
+    casesProduced:parseInt(g('f_casesProduced'))||null,
+    region:g('f_region'),
+    cellarSlots,cellarSection:firstSlot.section||'',cellarRow:firstSlot.row||'',cellarSlot:firstSlot.slot||'',
+    notes:g('f_notes'),
+    blend:(type==='Red Blend'||type==='White Blend')?FD.blend.filter(b=>b.variety):[],
+    // preserve any existing legacy fields
+    winemakerName:FD.winemakerName||'',winemakerContact:FD.winemakerContact||'',
+    discoveredHow:FD.discoveredHow||'',country:FD.country||'',
+    city:FD.city||'',state:FD.state||'',
+    farmingMode:FD.farmingMode||'',cooperage:FD.cooperage||'',oakPct:FD.oakPct||null,
+    allocStatus:FD.allocStatus||'',allocQty:FD.allocQty||null,
+    allocReleaseDate:FD.allocReleaseDate||'',allocNotes:FD.allocNotes||'',
+    visitLog:FD.visitLog||[],openedLog:FD.openedLog||[]
+  };
   const isEdit=FD.id&&S.wines.find(w=>w.id===FD.id);
   S.wines=isEdit?S.wines.map(w=>w.id===wine.id?wine:w):[wine,...S.wines];
   save();closeOverlay();
@@ -1489,7 +1578,7 @@ function deleteClub(id){
 }
 
 // ══════════════════════════════════════════
-// OPENED LOG
+// BOTTLE CONSUMPTION LOG
 // ══════════════════════════════════════════
 function saveOpenedLog(wineId){
   const g=id=>{const el=document.getElementById(id);return el?(el.tagName==='TEXTAREA'?el.value:el.value.trim()):'';}
@@ -1497,9 +1586,17 @@ function saveOpenedLog(wineId){
   const wine=S.wines.find(w=>w.id===wineId);if(!wine)return;
   if(!wine.openedLog)wine.openedLog=[];
   wine.openedLog.unshift(entry);
-  if(wine.qty>1)wine.qty--;
-  S.wines=S.wines.map(w=>w.id===wineId?wine:w);
-  save();closeOverlay();S.selectedId=wineId;S.view='wineDetail';render();showToast('Opening logged!');
+  wine.qty=Math.max(0,(wine.qty||1)-1);
+  if(wine.qty===0){
+    // Remove from cellar entirely — bottle is consumed
+    S.wines=S.wines.filter(w=>w.id!==wineId);
+    save();closeOverlay();S.view='list';S.tab='cellar';
+    render();showToast('Bottle removed from cellar 🍷');
+  } else {
+    S.wines=S.wines.map(w=>w.id===wineId?wine:w);
+    save();closeOverlay();S.selectedId=wineId;S.view='wineDetail';
+    render();showToast(`Bottle consumed · ${wine.qty} remaining`);
+  }
 }
 
 // ══════════════════════════════════════════
