@@ -554,7 +554,7 @@ function renderNav(){
     <button class="bntab${S.tab==='home'?' active':''}" onclick="switchTab('home')"><span class="bntab-ico">🏠</span><span class="bntab-lbl">Home</span></button>
     <button class="bntab${S.tab==='cellar'?' active':''}" onclick="switchTab('cellar')"><span class="bntab-ico">🍷</span><span class="bntab-lbl">Cellar</span></button>
     <button class="bntab${S.tab==='tours'?' active':''}" onclick="switchTab('tours')"><span class="bntab-ico">🗺</span><span class="bntab-lbl">Visits</span></button>
-    <button class="bntab${S.tab==='clubs'?' active':''}" onclick="switchTab('clubs')"><span class="bntab-ico">📦</span><span class="bntab-lbl">Clubs</span></button>
+    <button class="bntab${S.tab==='clubs'?' active':''}" onclick="switchTab('clubs')"><span class="bntab-ico">📬</span><span class="bntab-lbl">Clubs</span></button>
   </div>`;
 }
 
@@ -578,9 +578,12 @@ function renderCellar(){
     <div class="page-header">
       <div class="ph-row">
         <div><div class="brand">The Allocation</div><div class="brand-sub">Small Batch Wine Cellar</div></div>
-        <div class="hstats">
-          <div><div class="hstat-num">${tb}</div><div class="hstat-lbl">Bottles</div></div>
-          <div><div class="hstat-num" style="font-size:${te>9999?'15px':'20px'}">${te>0?fmt$(te):'—'}</div><div class="hstat-lbl">Value</div></div>
+        <div style="display:flex;align-items:center;gap:14px">
+          <div class="hstats">
+            <div><div class="hstat-num">${tb}</div><div class="hstat-lbl">Bottles</div></div>
+            <div><div class="hstat-num" style="font-size:${te>9999?'15px':'20px'}">${te>0?fmt$(te):'—'}</div><div class="hstat-lbl">Value</div></div>
+          </div>
+          <button onclick="openCellarSettings()" style="background:none;border:none;font-size:22px;cursor:pointer;padding:4px;line-height:1;color:var(--muted)" title="Settings & Export">⚙️</button>
         </div>
       </div>
       <div class="search-wrap"><div class="sbox"><span class="sico">🔍</span><input type="search" id="searchInput" placeholder="Winery, vintage, winemaker…" value="${esc(search)}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="search">${search?`<button class="sclr" id="searchClr">×</button>`:''}</div></div>
@@ -600,8 +603,7 @@ function renderCellar(){
     </div>
     <div class="sbar"><span class="sbar-ct">${filtered.length} wines · ${tb} bottles${rn?` · ${rn} ready`:''}</span><button class="sbar-btn" onclick="openSort()">⇅ ${sl}</button></div>
     ${cards}
-    <button class="fab" onclick="openWineForm(null)">+</button>
-    <button style="position:fixed;bottom:calc(84px + env(safe-area-inset-bottom) + 56px);right:80px;background:var(--warm);border:1px solid var(--border);color:var(--muted);border-radius:20px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;z-index:200" onclick="openExport()">Export ↑</button>`;
+    <button class="fab" onclick="openWineForm(null)">+</button>`;
 }
 
 // ══════════════════════════════════════════
@@ -631,7 +633,7 @@ function renderWineDetail(w){
     ${(w.casesProduced||w.farmingMode||w.cooperage||w.oakPct)?`<div class="dcard"><div class="dcard-title">Production</div><div class="kv">${w.casesProduced?`<span class="kv-k">Cases</span><span class="kv-v">${fmtN(w.casesProduced)}</span>`:''} ${w.farmingMode?`<span class="kv-k">Farming</span><span class="kv-v">${esc(w.farmingMode)}</span>`:''} ${w.cooperage?`<span class="kv-k">Cooperage</span><span class="kv-v">${esc(w.cooperage)}</span>`:''} ${w.oakPct?`<span class="kv-k">New oak</span><span class="kv-v">${w.oakPct}%</span>`:''}</div></div>`:''}
     ${w.allocStatus?`<div class="dcard"><div class="dcard-title">Allocation</div><div class="alloc-item"><div class="kv"><span class="kv-k">Status</span><span class="kv-v"><span class="as-pill as-${esc(w.allocStatus)}">${esc(w.allocStatus)}</span></span>${w.allocQty?`<span class="kv-k">Qty</span><span class="kv-v">${w.allocQty} bottles</span>`:''} ${w.allocReleaseDate?`<span class="kv-k">Release</span><span class="kv-v">${esc(w.allocReleaseDate)}</span>`:''} ${w.allocNotes?`<span class="kv-k">Notes</span><span class="kv-v">${esc(w.allocNotes)}</span>`:''}</div></div></div>`:''}
     ${(w.type==='Blend'&&w.blend&&w.blend.length)?`<div class="dcard"><div class="dcard-title">Blend</div>${w.blend.map(b=>`<div class="bv-row"><div class="bv-label"><span>${esc(b.variety)}</span><span>${b.pct}%</span></div><div class="bv-track"><div class="bv-fill" style="width:${b.pct}%"></div></div></div>`).join('')}</div>`:''}
-    ${(w.openedLog&&w.openedLog.length)?`<div class="dcard"><div class="dcard-title">Consumption History</div>${w.openedLog.map(o=>`<div class="oe-entry"><div class="oe-top"><span class="oe-date">${fmtDate(o.date)}</span>${o.occasion?`<span class="oe-occ">${esc(o.occasion)}</span>`:''}</div>${o.notes?`<div class="oe-note">${esc(o.notes)}</div>`:''} ${o.pairedWith?`<div class="oe-pair">🍽 ${esc(o.pairedWith)}</div>`:''}</div>`).join('')}<button style="width:100%;padding:9px;border-radius:9px;background:var(--wine-light);border:1px solid #d4a0a8;color:var(--wine);font-weight:600;font-size:13px;cursor:pointer;margin-top:6px" onclick="logOpened(${w.id})">🍾 Open Another Bottle</button></div>`:`<button style="width:100%;padding:11px;border-radius:10px;background:var(--wine-light);border:1px solid #d4a0a8;color:var(--wine);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:12px" onclick="logOpened(${w.id})">🍾 Open Bottle</button>`}
+    ${(w.openedLog&&w.openedLog.length)?`<div class="dcard"><div class="dcard-title">Bottles Opened</div>${w.openedLog.map(o=>`<div class="oe-entry"><div class="oe-top"><span class="oe-date">${fmtDate(o.date)}</span>${o.occasion?`<span class="oe-occ">${esc(o.occasion)}</span>`:''}</div>${o.notes?`<div class="oe-note">${esc(o.notes)}</div>`:''} ${o.pairedWith?`<div class="oe-pair">🍽 ${esc(o.pairedWith)}</div>`:''}</div>`).join('')}<button style="width:100%;padding:9px;border-radius:9px;background:var(--wine-light);border:1px solid #d4a0a8;color:var(--wine);font-weight:600;font-size:13px;cursor:pointer;margin-top:6px" onclick="logOpened(${w.id})">+ Log Another Opening</button></div>`:`<button style="width:100%;padding:11px;border-radius:10px;background:var(--wine-light);border:1px solid #d4a0a8;color:var(--wine);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:12px" onclick="logOpened(${w.id})">🔓 Log an Opening</button>`}
     ${w.notes?`<div class="dcard-title" style="margin-bottom:10px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">Tasting Notes</div><div class="notes-card">"${esc(w.notes)}"</div>`:''}
   </div>`;
 }
@@ -1056,24 +1058,49 @@ function renderLogShipment(clubId){
 }
 
 function renderLogOpened(wineId){
-  const wine=S.wines.find(w=>w.id===wineId);
-  const wineLabel=wine?`${wine.winery}${wine.wineName?' — '+wine.wineName:''}`:'';
   return`<div class="overlay"><div class="sheet">
     <div class="sh-handle"></div>
-    <div class="sh-header"><span class="sh-title">Bottle Consumption Log</span><button class="sh-close" onclick="closeOverlay()">×</button></div>
+    <div class="sh-header"><span class="sh-title">Log an Opening</span><button class="sh-close" onclick="closeOverlay()">×</button></div>
     <div class="sh-body">
-      ${wineLabel?`<div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">${esc(wineLabel)}</div>`:''}
       <div class="fg"><label>Date Opened</label><input class="fi" id="lo_date" type="date" value="${today()}"></div>
-      <div class="fg"><label>Occasion</label><input class="fi" id="lo_occasion" type="text" placeholder="e.g. Anniversary dinner, Tuesday 🙂" autocomplete="off" autocorrect="off" autocapitalize="sentences"></div>
-      <div class="fg"><label>Paired With</label><input class="fi" id="lo_pairedWith" type="text" placeholder="e.g. Braised short rib, mushroom risotto" autocomplete="off" autocorrect="off" autocapitalize="sentences"></div>
-      <div class="fg"><label>Taste Notes</label><textarea class="fi" id="lo_notes" rows="4" placeholder="Aromas, palate, evolution in the glass…"></textarea></div>
-      <button class="save-btn" style="background:#b91c1c" onclick="saveOpenedLog(${wineId})">Remove from Cellar</button>
+      <div class="fg"><label>Occasion</label><input class="fi" id="lo_occasion" type="text" placeholder="e.g. Anniversary dinner, Tuesday 🙂"></div>
+      <div class="fg"><label>Paired With</label><input class="fi" id="lo_pairedWith" type="text" placeholder="e.g. Braised short rib, mushroom risotto"></div>
+      <div class="fg"><label>How It Showed</label><textarea class="fi" id="lo_notes" rows="4" placeholder="Aromas, palate, evolution in the glass…"></textarea></div>
+      <button class="save-btn" onclick="saveOpenedLog(${wineId})">Save Opening</button>
     </div>
   </div></div>`;
 }
 
 function renderSort(){
   return`<div class="overlay" onclick="if(event.target===this)closeOverlay()"><div class="sheet"><div class="sh-handle"></div><div class="sh-header"><span class="sh-title">Sort By</span><button class="sh-close" onclick="closeOverlay()">×</button></div>${SORT_OPTS.map(o=>`<div class="sort-opt${S.sortKey===o.key?' active':''}" onclick="setSortKey('${o.key}')"><span class="sort-opt-lbl">${o.label}</span>${S.sortKey===o.key?'<span class="sort-check">✓</span>':''}</div>`).join('')}</div></div>`;
+}
+
+function openCellarSettings(){injectOverlay(renderCellarSettings());}
+
+function renderCellarSettings(){
+  const{wines}=S;
+  const tb=wines.reduce((s,w)=>s+(w.qty||1),0);
+  const te=wines.reduce((s,w)=>s+((w.estValue||0)*(w.qty||1)),0);
+  return`<div class="overlay" onclick="if(event.target===this)closeOverlay()"><div class="sheet">
+    <div class="sh-handle"></div>
+    <div class="sh-header"><span class="sh-title">Cellar Settings</span><button class="sh-close" onclick="closeOverlay()">×</button></div>
+    <div style="padding:8px 20px 24px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;margin-top:8px">Export Collection</div>
+      <div style="background:var(--cream);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;margin-bottom:20px">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between">
+          <div><div style="font-size:14px;font-weight:600">${wines.length} wines · ${tb} bottles</div><div style="font-size:12px;color:var(--muted);margin-top:2px">${te>0?`Est. value ${fmt$(te)}`:'No value set'}</div></div>
+        </div>
+        <button onclick="exportCSV()" style="width:100%;padding:14px 16px;background:none;border:none;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;cursor:pointer;font-family:var(--sans);text-align:left">
+          <span style="font-size:22px">📊</span>
+          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Export as CSV</div><div style="font-size:12px;color:var(--muted)">Open in Excel, Numbers, or Google Sheets</div></div>
+        </button>
+        <button onclick="exportJSON()" style="width:100%;padding:14px 16px;background:none;border:none;display:flex;align-items:center;gap:12px;cursor:pointer;font-family:var(--sans);text-align:left">
+          <span style="font-size:22px">📋</span>
+          <div><div style="font-size:14px;font-weight:600;color:var(--ink)">Export as JSON</div><div style="font-size:12px;color:var(--muted)">Full backup including all data & history</div></div>
+        </button>
+      </div>
+    </div>
+  </div></div>`;
 }
 
 function renderExport(){
@@ -1462,7 +1489,7 @@ function deleteClub(id){
 }
 
 // ══════════════════════════════════════════
-// BOTTLE CONSUMPTION LOG
+// OPENED LOG
 // ══════════════════════════════════════════
 function saveOpenedLog(wineId){
   const g=id=>{const el=document.getElementById(id);return el?(el.tagName==='TEXTAREA'?el.value:el.value.trim()):'';}
@@ -1470,17 +1497,9 @@ function saveOpenedLog(wineId){
   const wine=S.wines.find(w=>w.id===wineId);if(!wine)return;
   if(!wine.openedLog)wine.openedLog=[];
   wine.openedLog.unshift(entry);
-  wine.qty=Math.max(0,(wine.qty||1)-1);
-  if(wine.qty===0){
-    // Remove from cellar entirely — bottle is consumed
-    S.wines=S.wines.filter(w=>w.id!==wineId);
-    save();closeOverlay();S.view='list';S.tab='cellar';
-    render();showToast('Bottle removed from cellar 🍷');
-  } else {
-    S.wines=S.wines.map(w=>w.id===wineId?wine:w);
-    save();closeOverlay();S.selectedId=wineId;S.view='wineDetail';
-    render();showToast(`Bottle consumed · ${wine.qty} remaining`);
-  }
+  if(wine.qty>1)wine.qty--;
+  S.wines=S.wines.map(w=>w.id===wineId?wine:w);
+  save();closeOverlay();S.selectedId=wineId;S.view='wineDetail';render();showToast('Opening logged!');
 }
 
 // ══════════════════════════════════════════
