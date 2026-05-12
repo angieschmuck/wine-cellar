@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="The Allocation">
+<meta name="apple-mobile-web-app-title" content="The Pour Collection">
 <meta name="theme-color" content="#f7f2eb">
-<title>The Allocation</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>The Pour Collection</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <style>
 :root{
   --wine:#8b2635;--wine-deep:#6b1a27;--wine-light:#f9f0f2;
@@ -23,8 +23,8 @@
   --r:12px;--rlg:18px;
   --sh:0 1px 4px rgba(44,33,24,.08);
   --sh2:0 3px 12px rgba(44,33,24,.10);
-  --serif:'Playfair Display',Georgia,serif;
-  --sans:'Source Sans 3',system-ui,sans-serif;
+  --serif:'Montserrat',system-ui,sans-serif;
+  --sans:'Montserrat',system-ui,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overscroll-behavior:none}
@@ -46,9 +46,9 @@ body{font-family:var(--sans);background:var(--cream);color:var(--ink);min-height
 .bntab-badge{background:var(--wine);color:#fff;border-radius:8px;font-size:9px;font-weight:700;padding:1px 5px;margin-left:2px}
 
 /* ── SHARED HEADER ── */
-.page-header{background:var(--warm);border-bottom:1px solid var(--border);padding:calc(50px + env(safe-area-inset-top)) 18px 14px;position:sticky;top:0;z-index:100}
+.page-header{background:var(--warm);border-bottom:1px solid var(--border);padding:calc(36px + env(safe-area-inset-top)) 18px 10px;position:sticky;top:0;z-index:100}
 .ph-row{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:12px}
-.brand{font-family:var(--serif);font-size:26px;font-weight:700;color:var(--wine)}
+.brand{font-family:var(--serif);font-size:20px;font-weight:700;color:var(--wine)}
 .brand-sub{font-size:10px;font-weight:500;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:1px}
 .ph-action{background:var(--wine);color:#fff;border:none;border-radius:20px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer}
 .hstats{display:flex;gap:18px}
@@ -464,10 +464,10 @@ select.fi{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 // ══════════════════════════════════════════
 // CONSTANTS
 // ══════════════════════════════════════════
-const SK='theAllocation_v2';
+const SK='thePourCollection_v1';
 const WINE_TYPES=['Red','Red Blend','White','White Blend','Rosé','Sparkling','Dessert','Fortified','Orange','Other'];
 const TYPE_GROUPS={'Red':['Red','Red Blend'],'White':['White','White Blend'],'Rosé':['Rosé'],'Sparkling':['Sparkling']};
-const BLEND_VARS=['Cabernet Sauvignon','Merlot','Pinot Noir','Syrah/Shiraz','Zinfandel','Malbec','Tempranillo','Sangiovese','Grenache','Petit Verdot','Cabernet Franc','Mourvèdre','Carignan','Cinsault','Nebbiolo','Barbera','Chardonnay','Sauvignon Blanc','Riesling','Pinot Grigio','Viognier','Gewürztraminer','Muscat','Roussanne','Marsanne','Petite Sirah','Primitivo'];
+const BLEND_VARS=['Barbera','Cabernet Franc','Cabernet Sauvignon','Carignan','Chardonnay','Cinsault','Gewürztraminer','Grenache','Malbec','Marsanne','Merlot','Mourvèdre','Muscat','Nebbiolo','Petit Verdot','Petite Sirah','Pinot Grigio','Pinot Noir','Primitivo','Riesling','Roussanne','Sangiovese','Sauvignon Blanc','Syrah/Shiraz','Tempranillo','Viognier','Zinfandel'];
 const COUNTRIES=['USA','France','Italy','Spain','Australia','New Zealand','Argentina','Germany','Portugal','Austria','Chile','South Africa','Other'];
 const DECADES=['1970s','1980s','1990s','2000s','2010s','2020s'];
 const FARM_MODES=['Conventional','Sustainable','Organic','Biodynamic','Minimal Intervention','Natural'];
@@ -598,7 +598,7 @@ function renderCellar(){
     ${showInstall?`<div class="install-banner"><span>📱</span><span>Add to Home Screen for the full experience</span><button class="ib-btn" onclick="dismissInstall()">Got it</button><button class="ib-x" onclick="dismissInstall()">×</button></div>`:''}
     <div class="page-header">
       <div class="ph-row">
-        <div><div class="brand">The Allocation</div><div class="brand-sub">Small Batch Wine Cellar</div></div>
+        <div><div class="brand">The Pour Collection</div><div class="brand-sub">Small Batch Wine Cellar</div></div>
         <div style="display:flex;align-items:center;gap:14px">
           <div class="hstats">
             <div><div class="hstat-num">${tb}</div><div class="hstat-lbl">Bottles</div></div>
@@ -650,15 +650,15 @@ function renderWineDetail(w){
     ${drinkHTML}
     ${(w.cellarSlots&&w.cellarSlots.some(s=>s.section||s.row||s.slot))||(w.cellarSection)?`<div class="dcard"><div class="dcard-title">Cellar Location</div>${
       (w.cellarSlots&&w.cellarSlots.length>1)?
-        `<div style="display:flex;flex-direction:column;gap:6px">${w.cellarSlots.map((s,i)=>(s.section||s.row||s.slot)?`<div style="display:flex;align-items:center;gap:10px"><div style="font-size:11px;font-weight:700;color:var(--muted);min-width:36px">Btl ${i+1}</div><div class="cellar-loc" style="flex:1;padding:8px 12px"><span class="cellar-ico">🗄️</span><div><div class="cellar-sect">${esc(s.section||'—')}</div><div class="cellar-sub">${esc([s.row&&`Row ${s.row}`,s.slot&&`Slot ${s.slot}`].filter(Boolean).join(' · ')||'')}</div></div></div></div>`:''
+        `<div style="display:flex;flex-direction:column;gap:6px">${w.cellarSlots.map((s,i)=>(s.section||s.row||s.slot)?`<div style="display:flex;align-items:center;gap:10px"><div style="font-size:11px;font-weight:700;color:var(--muted);min-width:36px">Btl ${i+1}</div><div class="cellar-loc" style="flex:1;padding:8px 12px"><span class="cellar-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="3" width="20" height="3" rx="1" fill="#b8914a"/><rect x="2" y="10" width="20" height="3" rx="1" fill="#b8914a"/><rect x="2" y="17" width="20" height="3" rx="1" fill="#b8914a"/><rect x="4" y="6" width="2" height="4" rx="1" fill="#8b6340"/><rect x="9" y="6" width="2" height="4" rx="1" fill="#8b6340"/><rect x="14" y="6" width="2" height="4" rx="1" fill="#8b6340"/><rect x="19" y="6" width="2" height="4" rx="1" fill="#8b6340"/><rect x="4" y="13" width="2" height="4" rx="1" fill="#8b6340"/><rect x="9" y="13" width="2" height="4" rx="1" fill="#8b6340"/><rect x="14" y="13" width="2" height="4" rx="1" fill="#8b6340"/><rect x="19" y="13" width="2" height="4" rx="1" fill="#8b6340"/></svg></span><div><div class="cellar-sect">${esc(s.section||'—')}</div><div class="cellar-sub">${esc([s.row&&`Row ${s.row}`,s.slot&&`Slot ${s.slot}`].filter(Boolean).join(' · ')||'')}</div></div></div></div>`:''
         ).filter(Boolean).join('')}</div>`
-      :`<div class="cellar-loc"><span class="cellar-ico">🗄️</span><div><div class="cellar-sect">${esc(w.cellarSection||'—')}</div><div class="cellar-sub">${esc([w.cellarRow&&`Row ${w.cellarRow}`,w.cellarSlot&&`Slot ${w.cellarSlot}`].filter(Boolean).join(' · ')||'No row/slot')}</div></div></div>`
+      :`<div class="cellar-loc"><span class="cellar-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="3" width="20" height="3" rx="1" fill="#b8914a"/><rect x="2" y="10" width="20" height="3" rx="1" fill="#b8914a"/><rect x="2" y="17" width="20" height="3" rx="1" fill="#b8914a"/><rect x="4" y="6" width="2" height="4" rx="1" fill="#8b6340"/><rect x="9" y="6" width="2" height="4" rx="1" fill="#8b6340"/><rect x="14" y="6" width="2" height="4" rx="1" fill="#8b6340"/><rect x="19" y="6" width="2" height="4" rx="1" fill="#8b6340"/><rect x="4" y="13" width="2" height="4" rx="1" fill="#8b6340"/><rect x="9" y="13" width="2" height="4" rx="1" fill="#8b6340"/><rect x="14" y="13" width="2" height="4" rx="1" fill="#8b6340"/><rect x="19" y="13" width="2" height="4" rx="1" fill="#8b6340"/></svg></span><div><div class="cellar-sect">${esc(w.cellarSection||'—')}</div><div class="cellar-sub">${esc([w.cellarRow&&`Row ${w.cellarRow}`,w.cellarSlot&&`Slot ${w.cellarSlot}`].filter(Boolean).join(' · ')||'No row/slot')}</div></div></div>`
     }</div>`:''}
     <div class="dcard"><div class="dcard-title">Winery & Origin</div><div class="kv">${w.vineyard?`<span class="kv-k">Vineyard</span><span class="kv-v">${esc(w.vineyard)}</span>`:''} ${w.region?`<span class="kv-k">Region</span><span class="kv-v">${esc(w.region)}</span>`:''} ${w.city?`<span class="kv-k">City</span><span class="kv-v">${esc(w.city)}${w.state?`, ${esc(w.state)}`:''}</span>`:''} ${w.country?`<span class="kv-k">Country</span><span class="kv-v">${esc(w.country)}</span>`:''} ${w.winemakerName?`<span class="kv-k">Winemaker</span><span class="kv-v">${esc(w.winemakerName)}</span>`:''} ${w.winemakerContact?`<span class="kv-k">Contact</span><span class="kv-v">${esc(w.winemakerContact)}</span>`:''} ${w.discoveredHow?`<span class="kv-k">Discovered</span><span class="kv-v">${esc(w.discoveredHow)}</span>`:''}</div></div>
     ${(w.casesProduced||w.farmingMode||w.cooperage||w.oakPct)?`<div class="dcard"><div class="dcard-title">Production</div><div class="kv">${w.casesProduced?`<span class="kv-k">Cases</span><span class="kv-v">${fmtN(w.casesProduced)}</span>`:''} ${w.farmingMode?`<span class="kv-k">Farming</span><span class="kv-v">${esc(w.farmingMode)}</span>`:''} ${w.cooperage?`<span class="kv-k">Cooperage</span><span class="kv-v">${esc(w.cooperage)}</span>`:''} ${w.oakPct?`<span class="kv-k">New oak</span><span class="kv-v">${w.oakPct}%</span>`:''}</div></div>`:''}
     ${w.allocStatus?`<div class="dcard"><div class="dcard-title">Allocation</div><div class="alloc-item"><div class="kv"><span class="kv-k">Status</span><span class="kv-v"><span class="as-pill as-${esc(w.allocStatus)}">${esc(w.allocStatus)}</span></span>${w.allocQty?`<span class="kv-k">Qty</span><span class="kv-v">${w.allocQty} bottles</span>`:''} ${w.allocReleaseDate?`<span class="kv-k">Release</span><span class="kv-v">${esc(w.allocReleaseDate)}</span>`:''} ${w.allocNotes?`<span class="kv-k">Notes</span><span class="kv-v">${esc(w.allocNotes)}</span>`:''}</div></div></div>`:''}
     ${(w.type==='Blend'&&w.blend&&w.blend.length)?`<div class="dcard"><div class="dcard-title">Blend</div>${w.blend.map(b=>`<div class="bv-row"><div class="bv-label"><span>${esc(b.variety)}</span><span>${b.pct}%</span></div><div class="bv-track"><div class="bv-fill" style="width:${b.pct}%"></div></div></div>`).join('')}</div>`:''}
-    ${(w.openedLog&&w.openedLog.length)?`<div class="dcard"><div class="dcard-title">Consumption History</div>${w.openedLog.map(o=>`<div class="oe-entry"><div class="oe-top"><span class="oe-date">${fmtDate(o.date)}</span>${o.occasion?`<span class="oe-occ">${esc(o.occasion)}</span>`:''}</div>${o.notes?`<div class="oe-note">${esc(o.notes)}</div>`:''} ${o.pairedWith?`<div class="oe-pair">🍽 ${esc(o.pairedWith)}</div>`:''}</div>`).join('')}<button style="width:100%;padding:9px;border-radius:9px;background:var(--wine-light);border:1px solid #d4a0a8;color:var(--wine);font-weight:600;font-size:13px;cursor:pointer;margin-top:6px" onclick="logOpened(${w.id})">🍾 Open Another Bottle</button></div>`:`<button style="width:100%;padding:11px;border-radius:10px;background:var(--wine-light);border:1px solid #d4a0a8;color:var(--wine);font-weight:600;font-size:13px;cursor:pointer;margin-bottom:12px" onclick="logOpened(${w.id})">🍾 Open Bottle</button>`}
+    ${(w.openedLog&&w.openedLog.length)?`<div class="dcard"><div class="dcard-title">Consumption History</div>${w.openedLog.map(o=>`<div class="oe-entry"><div class="oe-top"><span class="oe-date">${fmtDate(o.date)}</span>${o.occasion?`<span class="oe-occ">${esc(o.occasion)}</span>`:''}</div>${o.notes?`<div class="oe-note">${esc(o.notes)}</div>`:''} ${o.pairedWith?`<div class="oe-pair">🍽 ${esc(o.pairedWith)}</div>`:''}</div>`).join('')}<button style="width:100%;padding:9px;border-radius:9px;background:var(--wine-light);border:1px solid #d4a0a8;color:var(--wine);font-weight:600;font-size:13px;cursor:pointer;margin-top:6px" onclick="logOpened(${w.id})">🍾 Open Another Bottle</button></div>`:`<div style="display:flex;gap:10px;margin-bottom:12px"><button style="flex:1;padding:11px;border-radius:10px;background:var(--wine-light);border:1px solid #d4a0a8;color:var(--wine);font-weight:600;font-size:13px;cursor:pointer" onclick="logOpened(${w.id})">🍾 Open Bottle</button><button style="flex:1;padding:11px;border-radius:10px;background:var(--amber-bg);border:1px solid var(--gold-mid);color:var(--amber);font-weight:600;font-size:13px;cursor:pointer" onclick="logRemoved(${w.id})">🎁 Remove Bottle</button></div>`}
     ${w.notes?`<div class="dcard-title" style="margin-bottom:10px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">Tasting Notes</div><div class="notes-card">"${esc(w.notes)}"</div>`:''}
   </div>`;
 }
@@ -1058,6 +1058,41 @@ function renderLogShipment(clubId){
   </div></div>`;
 }
 
+function logRemoved(id){injectOverlay(renderLogRemoved(id));}
+
+function renderLogRemoved(wineId){
+  const wine=S.wines.find(w=>w.id===wineId);
+  const wineLabel=wine?`${wine.winery}${wine.wineName?' — '+wine.wineName:''}`:'';
+  return`<div class="overlay"><div class="sheet">
+    <div class="sh-handle"></div>
+    <div class="sh-header"><span class="sh-title">Bottle Removal Log</span><button class="sh-close" onclick="closeOverlay()">×</button></div>
+    <div class="sh-body">
+      ${wineLabel?`<div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">${esc(wineLabel)}</div>`:''}
+      <div class="fg"><label>Date Removed</label><input class="fi" id="lr_date" type="date" value="${today()}"></div>
+      <div class="fg"><label>Notes</label><textarea class="fi" id="lr_notes" rows="4" placeholder="e.g. Gift for John's birthday, donated to charity auction…"></textarea></div>
+      <button class="save-btn" style="background:var(--amber)" onclick="saveRemovedLog(${wineId})">Remove from Cellar</button>
+    </div>
+  </div></div>`;
+}
+
+function saveRemovedLog(wineId){
+  const g=id=>{const el=document.getElementById(id);return el?(el.tagName==='TEXTAREA'?el.value:el.value.trim()):'';}
+  const entry={date:g('lr_date')||today(),notes:g('lr_notes'),type:'removed'};
+  const wine=S.wines.find(w=>w.id===wineId);if(!wine)return;
+  if(!wine.openedLog)wine.openedLog=[];
+  wine.openedLog.unshift(entry);
+  wine.qty=Math.max(0,(wine.qty||1)-1);
+  if(wine.qty===0){
+    S.wines=S.wines.filter(w=>w.id!==wineId);
+    save();closeOverlay();S.view='list';S.tab='cellar';
+    render();showToast('Bottle removed from cellar');
+  } else {
+    S.wines=S.wines.map(w=>w.id===wineId?wine:w);
+    save();closeOverlay();S.selectedId=wineId;S.view='wineDetail';
+    render();showToast(`Bottle removed · ${wine.qty} remaining`);
+  }
+}
+
 function renderLogOpened(wineId){
   const wine=S.wines.find(w=>w.id===wineId);
   const wineLabel=wine?`${wine.winery}${wine.wineName?' — '+wine.wineName:''}`:'';
@@ -1194,10 +1229,32 @@ function renderHome(){
   [...tours].sort((a,b)=>new Date(b.date||0)-new Date(a.date||0)).slice(0,1).forEach(t=>recentActivity.push({dot:'dot-visit',text:`Visit — <strong>${esc(t.name||'Unnamed')}</strong>`,time:fmtDate(t.date)}));
   clubs.forEach(c=>(c.shipments||[]).filter(s=>s.status==='Received').slice(0,1).forEach(s=>recentActivity.push({dot:'dot-ship',text:`Shipment received — <strong>${esc(c.winery)}</strong>${s.bottles?` × ${s.bottles}`:''}`,time:fmtDate(s.date)})));
 
-  return`<div class="dash-hero">
-    <div class="dash-greeting">The Allocation</div>
-    <div class="dash-main">${tb} bottle${tb!==1?'s':''}</div>
-    <div class="dash-sub">${te>0?`Est. value · ${fmt$(te)}`:'Start adding wines to your cellar'}</div>
+  return`<div class="dash-hero" style="padding:calc(16px + env(safe-area-inset-top)) 20px 20px;min-height:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div>
+        <div style="font-family:var(--serif);font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:3px">The Pour Collection</div>
+        <div class="dash-main" style="font-size:28px;margin-bottom:2px">${tb} bottle${tb!==1?'s':''}</div>
+        <div class="dash-sub">${te>0?`Est. value · ${fmt$(te)}`:'Start adding wines to your cellar'}</div>
+      </div>
+      <div style="opacity:.85">
+        <svg width="54" height="54" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="4" width="50" height="6" rx="2" fill="rgba(255,255,255,.35)"/>
+          <rect x="2" y="20" width="50" height="6" rx="2" fill="rgba(255,255,255,.35)"/>
+          <rect x="2" y="36" width="50" height="6" rx="2" fill="rgba(255,255,255,.35)"/>
+          <rect x="2" y="46" width="50" height="6" rx="2" fill="rgba(255,255,255,.25)"/>
+          <rect x="6" y="10" width="5" height="10" rx="2.5" fill="rgba(255,255,255,.55)"/>
+          <rect x="16" y="10" width="5" height="10" rx="2.5" fill="rgba(255,255,255,.55)"/>
+          <rect x="26" y="10" width="5" height="10" rx="2.5" fill="rgba(255,255,255,.55)"/>
+          <rect x="36" y="10" width="5" height="10" rx="2.5" fill="rgba(255,255,255,.55)"/>
+          <rect x="46" y="10" width="5" height="10" rx="2.5" fill="rgba(255,255,255,.45)"/>
+          <rect x="6" y="26" width="5" height="10" rx="2.5" fill="rgba(255,255,255,.55)"/>
+          <rect x="16" y="26" width="5" height="10" rx="2.5" fill="rgba(255,255,255,.55)"/>
+          <rect x="26" y="26" width="5" height="10" rx="2.5" fill="rgba(255,255,255,.65)"/>
+          <rect x="36" y="26" width="5" height="10" rx="2.5" fill="rgba(255,255,255,.55)"/>
+          <rect x="46" y="26" width="5" height="10" rx="2.5" fill="rgba(255,255,255,.45)"/>
+        </svg>
+      </div>
+    </div>
   </div>
   <div class="dash-stat-grid">
     <div class="dash-stat"><div class="ds-lbl">In cellar</div><div class="ds-val">${tb}</div><div class="ds-note">${wines.length} wine${wines.length!==1?'s':''}</div></div>
@@ -1205,8 +1262,16 @@ function renderHome(){
     <div class="dash-stat"><div class="ds-lbl">Tasting fees</div><div class="ds-val">${totalTastingFees>0?fmt$(totalTastingFees):'—'}</div><div class="ds-note">Across ${tours.length} visit${tours.length!==1?'s':''}</div></div>
     <div class="dash-stat"><div class="ds-lbl">Wine purchased</div><div class="ds-val">${totalWinePurchased>0?fmt$(totalWinePurchased):'—'}</div><div class="ds-note">Visits + clubs</div></div>
   </div>
-  ${drinkSoon.length?`<div class="dash-section"><div class="dash-section-title">Drink soon</div></div>
-  <div class="drink-soon-card">⏳ ${drinkSoon.map(w=>`${w.year?w.year+' ':''}${esc(w.winery)}${w.wineName?' '+esc(w.wineName):''}`).join(' · ')} — check drinking windows</div>`:''}
+  ${drinkSoon.length?`<div class="dash-section"><div class="dash-section-title">Drink Soon</div></div>
+  <div style="margin:0 12px 12px">
+    ${drinkSoon.map(w=>{const st=drinkStatus(w);return`<div onclick="openWineDetail(${w.id})" style="background:#fff;border-radius:var(--r);border:1px solid var(--gold-mid);box-shadow:var(--sh);padding:12px 14px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;justify-content:space-between">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${w.year?w.year+' ':''}${esc(w.winery)}${w.wineName?' · '+esc(w.wineName):''}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">${w.drinkTo?`Drink by ${w.drinkTo}`:'Check drinking window'}</div>
+      </div>
+      <span style="padding:3px 9px;border-radius:10px;font-size:11px;font-weight:700;margin-left:10px;flex-shrink:0;${st&&st.pill==='dwp-past'?'background:#fef2f2;color:#b91c1c':'background:var(--amber-bg);color:var(--amber)'}">${st?st.label:'—'}</span>
+    </div>`}).join('')}
+  </div>`:''}
   <div class="dash-section"><div class="dash-section-title">Recent activity</div></div>
   ${recentActivity.length?`<div class="activity-card">${recentActivity.slice(0,5).map(a=>`<div class="act-row"><div class="act-dot ${a.dot}"></div><div class="act-text">${a.text}</div><div class="act-time">${a.time}</div></div>`).join('')}</div>`:`<div class="activity-card" style="text-align:center;color:var(--muted);padding:20px">Nothing logged yet — add your first wine!</div>`}
   ${upcomingShips.length?`<div class="dash-section"><div class="dash-section-title">Upcoming club shipments</div></div>
@@ -1614,11 +1679,11 @@ function deleteWine(id){
 function exportCSV(){
   const h=['ID','Winery','Wine Name','Vineyard','Type','Year','Region','City','State','Country','ABV','Qty','Price Paid','Est Value','Drink From','Drink To','Cases','Farming','Cooperage','New Oak %','Winemaker','Contact','Discovered','Alloc Status','Alloc Qty','Alloc Release','Alloc Notes','Section','Row','Slot','Notes','Blend','Openings'];
   const r=S.wines.map(w=>[w.id,w.winery,w.wineName||'',w.vineyard||'',w.type,w.year||'',w.region||'',w.city||'',w.state||'',w.country||'',w.abv||'',w.qty||1,w.pricePaid||'',w.estValue||'',w.drinkFrom||'',w.drinkTo||'',w.casesProduced||'',w.farmingMode||'',w.cooperage||'',w.oakPct||'',w.winemakerName||'',w.winemakerContact||'',w.discoveredHow||'',w.allocStatus||'',w.allocQty||'',w.allocReleaseDate||'',w.allocNotes||'',w.cellarSection||'',w.cellarRow||'',w.cellarSlot||'',(w.notes||'').replace(/"/g,'""'),(w.blend||[]).map(b=>`${b.variety} ${b.pct}%`).join('; '),(w.openedLog||[]).length].map(v=>`"${v}"`).join(','));
-  dl('the_allocation_cellar.csv',new Blob([[h.join(','),...r].join('\n')],{type:'text/csv'}));
+  dl('the_pour_collection_cellar.csv',new Blob([[h.join(','),...r].join('\n')],{type:'text/csv'}));
   closeOverlay();showToast('CSV exported!');
 }
 function exportJSON(){
-  dl('the_allocation.json',new Blob([JSON.stringify({wines:S.wines.map(w=>({...w,image:w.image?'[photo]':null})),tours:S.tours,clubs:S.clubs},null,2)],{type:'application/json'}));
+  dl('the_pour_collection.json',new Blob([JSON.stringify({wines:S.wines.map(w=>({...w,image:w.image?'[photo]':null})),tours:S.tours,clubs:S.clubs},null,2)],{type:'application/json'}));
   closeOverlay();showToast('JSON exported!');
 }
 function dl(n,b){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000);}
