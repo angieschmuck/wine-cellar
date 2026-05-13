@@ -595,7 +595,7 @@ function renderCellar(){
     ?`<div class="empty"><div class="empty-ico">🍷</div><div class="empty-h">${search||ha?'No wines match':'Your cellar awaits'}</div><div class="empty-p">${search||ha?'Try adjusting your search or filters.':'Tap + to add your first bottle.'}</div></div>`
     :`<div class="wgrid">${filtered.map(w=>{const st=drinkStatus(w);const sub=w.wineName||w.vineyard||w.region||'';return`<div class="wcard" onclick="openWineDetail(${w.id})"><div class="wc-img">${w.image?`<img src="${w.image}" alt="${esc(w.winery)}">`:`${bottleSVG(w.type)}`}<span class="wc-type ${typeClass(w.type)}">${esc(w.type)}</span>${(w.qty||1)>1?`<span class="wc-qty">×${w.qty}</span>`:''} ${w.allocStatus==='Open'?`<span class="wc-alloc">Alloc Open</span>`:''} ${st?`<div class="sbar-fill ${st.bar}"></div>`:''}</div><div class="wc-info"><div class="wc-winery">${esc(w.winery)}</div>${sub?`<div class="wc-name">${esc(sub)}</div>`:''}<div class="wc-bot"><span class="wc-year">${w.year||'—'}</span>${w.estValue?`<span class="wc-val">${fmt$(w.estValue)}</span>`:''}</div></div></div>`;}).join('')}</div>`;
   return`
-    ${showInstall?`<div class="install-banner"><span>📱</span><span>Add to Home Screen for the full experience</span><button class="ib-btn" onclick="dismissInstall()">Got it</button><button class="ib-x" onclick="dismissInstall()">×</button></div>`:''}
+    ${''/* install banner removed */}
     <div class="page-header">
       <div class="ph-row">
         <div><div class="brand">The Pour Collection</div><div class="brand-sub">Small Batch Wine Cellar</div></div>
@@ -1256,7 +1256,7 @@ function renderHome(){
     </div>`}).join('')}
   </div>`:''}
   <div class="dash-section"><div class="dash-section-title">Recent activity</div></div>
-  ${recentActivity.length?`<div class="activity-card">${recentActivity.slice(0,5).map(a=>`<div class="act-row"><div class="act-dot ${a.dot}"></div><div class="act-text">${a.text}</div><div class="act-time">${a.time}</div></div>`).join('')}</div>`:`<div class="activity-card" style="text-align:center;color:var(--muted);padding:20px">Nothing logged yet — add your first wine!</div>`}
+  ${recentActivity.length?`<div class="activity-card">${recentActivity.slice(0,5).map(a=>`<div class="act-row"><div class="act-dot ${a.dot}"></div><div class="act-text">${a.text}</div><div class="act-time">${a.time}</div></div>`).join('')}</div>`:`<div class="activity-card" style="text-align:center;color:var(--muted);padding:24px 20px"><div style="font-size:14px;margin-bottom:16px">Nothing logged yet — add your first wine!</div><button onclick="switchTab('cellar');setTimeout(()=>openWineForm(null),80)" style="display:inline-flex;align-items:center;gap:8px;background:var(--wine);color:#fff;border:none;border-radius:24px;padding:11px 24px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 3px 12px rgba(139,38,53,.35)"><span style="font-size:20px;line-height:1">+</span>Add Your First Wine</button></div>`}
   ${upcomingShips.length?`<div class="dash-section"><div class="dash-section-title">Upcoming club shipments</div></div>
   <div class="upcoming-ship-card">${upcomingShips.map(s=>`<div class="usc-row"><div><div class="usc-name">${esc(s.clubName)}</div><div class="usc-sub">${s.bottles?s.bottles+' bottles':''}</div></div><div class="usc-date">${fmtDate(s.date)}</div></div>`).join('')}</div>`:''}
   <div style="height:90px"></div>`;
